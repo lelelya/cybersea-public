@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('cybersea_theme')||'deep-sea')</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>书架</title>
+<script src="js/shared.js"></script>
+<script src="js/bgm-player.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/effects.css" />
+<style>
+/* ===== 书架卡片面板 ===== */
+.bookshelf-scene {
+  width: min(720px, 88vw);
+  margin: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  position: relative;
+  z-index: 0;
+}
+
+/* 页面布局 */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 页面整体背景图覆盖 */
+body.bs-has-page-bg {
+  background-image: var(--bs-page-bg) !important;
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+/* 顶部行 — 两张竖向卡片并排 */
+.bookshelf-row-top {
+  display: flex;
+  gap: 24px;
+  height: 460px;
+}
+
+/* 底部行 — 两张横向宽卡上下叠放 */
+.bookshelf-row-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== 玻璃卡片 ===== */
+.bs-card {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 玻璃质感 */
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+/* 上排竖向卡片 */
+.bs-card.card-portrait {
+  flex: 1;
+  height: 460px;
+}
+
+/* 下排横向宽卡 */
+.bs-card.card-landscape {
+  width: 100%;
+  height: 130px;
+}
+
+.bs-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.12) inset;
+}
+
+.bs-card:active {
+  transform: scale(0.98);
+}
+
+/* 卡片底图遮罩 */
+.bs-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(0,0,0,0.05) 0%,
+    transparent 40%,
+    rgba(0,0,0,0.35) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.bs-card.has-card-bg::before {
+  background: linear-gradient(180deg,
+    rgba(0,0,0,0.2) 0%,
+    transparent 35%,
+    rgba(0,0,0,0.45) 100%
+  );
+}
+
+/* 卡片单独底图 */
+.bs-card-bg-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+  opacity: 0.7;
+}
+
+/* 对角圆角 */
+.bs-card.card-tl { border-radius: 20px 0 20px 0; }
+.bs-card.card-tr { border-radius: 0 20px 0 20px; }
+.bs-card.card-bl { border-radius: 20px 0 20px 0; }
+.bs-card.card-br { border-radius: 0 20px 0 20px; }
+
+/* 圆角角加轻微内发光 */
+.bs-card.card-tl {
+  box-shadow: inset 1px 1px 0 rgba(255,255,255,0.06);
+}
+.bs-card.card-tr {
+  box-shadow: inset -1px 1px 0 rgba(255,255,255,0.06);
+}
+.bs-card.card-bl {
+  box-shadow: inset 1px -1px 0 rgba(255,255,255,0.06);
+}
+.bs-card.card-br {
+  box-shadow: inset -1px -1px 0 rgba(255,255,255,0.06);
+}
+
+/* 卡片内容 */
+.bs-card-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.bs-card-icon {
+  width: 40px;
+  height: 40px;
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+
+.bs-card-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  letter-spacing: 2px;
+}
+
+.bs-card-status {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  opacity: 0.8;
+}
+
+.bs-card-status.written { color: var(--color-primary); }
+.bs-card-status.not-written { color: var(--color-text-muted); }
+
+/* 响应式 */
+@media (max-width: 420px) {
+  .bookshelf-scene {
+    padding: 10px;
+    gap: 8px;
+  }
+  .bookshelf-row-top {
+    height: 310px;
+  }
+  .bs-card.card-portrait {
+    height: 310px;
+  }
+  .bs-card.card-landscape {
+    height: 110px;
+  }
+  .bs-card-label { font-size: 14px; letter-spacing: 1px; }
+  .bs-card-icon { width: 28px; height: 28px; }
+  .bs-card-status { font-size: 11px; }
+}
+</style>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#050a14" />
+  <link rel="stylesheet" href="css/design-system.css?v=2">
+</head>
+<body>
+
+<!-- 顶栏 -->
+<div class="topbar" style="z-index:10;">
+  <button id="menu-btn" class="menu-btn">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+  </button>
+  <div class="title">书架</div>
+  <div style="width:24px;"></div>
+</div>
+
+<div id="drawer-overlay" class="drawer-overlay"></div>
+<div id="nav-drawer" class="nav-drawer">
+  <div class="drawer-header">
+    <div class="drawer-user-info">
+      <div class="drawer-logo">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+        </svg>
+      </div>
+      <div class="drawer-title">CyberSea</div>
+    </div>
+  </div>
+  <nav class="drawer-nav">
+    <a href="index.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></i><span>聊天</span></a>
+    <a href="persona.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></i><span>角色设定</span></a>
+    <a href="anniversary.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></i><span>纪念日</span></a>
+    <a href="calendar.html" class="nav-item"><i><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></i><span>日历</span></a>
+    <a href="ledger.html" class="nav-item"><i><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></i><span>记账本</span></a>
+    <a href="album.html" class="nav-item"><i><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></i><span>相册</span></a>
+    <a href="plan.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></i><span>专属计划</span></a>
+    <a href="moments.html" class="nav-item"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg></i><span>朋友圈</span></a>
+    <a href="bookshelf.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><path d="M10 9h4"></path><path d="M10 13h2"></path></svg></i><span>书架</span></a>
+    <a href="memoryBank.html" class="nav-item"><i><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg></i><span>记忆库</span></a>
+    <a href="letters.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><polyline points="2 4 12 13 22 4"></polyline></svg></i><span>信箱</span></a>
+    <a href="parallelWorld.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20"></path><path d="M2 12h20"></path></svg></i><span>平行世界</span></a>
+    <a href="settings.html" class="nav-item"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></i><span>设置</span></a>
+  </nav>
+</div>
+
+<!-- 卡片网格场景 -->
+<div class="bookshelf-scene" id="bookshelf-scene">
+  <!-- 上半区：我的日记 + 他的日记 竖向并排 -->
+  <div class="bookshelf-row-top">
+    <div class="bs-card card-tl card-portrait" id="card-diary-user" data-link="diary.html?owner=user">
+      <div class="bs-card-bg-img" id="card-bg-diary-user"></div>
+      <div class="bs-card-inner">
+        <svg class="bs-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+          <path d="m15 5 4 4"></path>
+        </svg>
+        <span class="bs-card-label">我的日记</span>
+        <span class="bs-card-status" id="status-diary-user">加载中...</span>
+      </div>
+    </div>
+
+    <div class="bs-card card-tr card-portrait" id="card-diary-ai" data-link="diary.html?owner=ai">
+      <div class="bs-card-bg-img" id="card-bg-diary-ai"></div>
+      <div class="bs-card-inner">
+        <svg class="bs-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        </svg>
+        <span class="bs-card-label">他的日记</span>
+        <span class="bs-card-status" id="status-diary-ai">加载中...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 下半区：睡前故事 + 一起读书 横向上下叠放 -->
+  <div class="bookshelf-row-bottom">
+    <div class="bs-card card-bl card-landscape" id="card-stories" data-link="stories.html">
+      <div class="bs-card-bg-img" id="card-bg-stories"></div>
+      <div class="bs-card-inner">
+        <svg class="bs-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <span class="bs-card-label">睡前故事</span>
+      </div>
+    </div>
+
+    <div class="bs-card card-br card-landscape" id="card-books" data-link="books.html">
+      <div class="bs-card-bg-img" id="card-bg-books"></div>
+      <div class="bs-card-inner">
+        <svg class="bs-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>
+        <span class="bs-card-label">一起读书</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/bookshelf.js"></script>
+<script src="js/nav.js?v=6"></script>
+<script src="js/octopus-widget.js"></script>
+<script src="js/deepsea-particles.js"></script>
+</body>
+</html>

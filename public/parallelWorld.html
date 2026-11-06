@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('cybersea_theme')||'deep-sea')</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>平行世界</title>
+  <script src="js/shared.js"></script>
+<script src="js/bgm-player.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/effects.css" />
+<style>
+/* ============================================================
+   平行世界模块样式 —— 仅使用 theme.css 中的 CSS 变量
+   不修改任何现有样式文件
+   ============================================================ */
+
+/* ---------------- 视图切换 ---------------- */
+.pw-view { display: none; flex: 1; overflow: hidden; }
+.pw-view.active { display: flex; flex-direction: column; }
+
+/* ---------------- 存档列表 ---------------- */
+.pw-save-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pw-save-card {
+  background: var(--color-surface-translucent);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pw-save-card:hover {
+  border-color: var(--color-border-glow);
+  box-shadow: var(--shadow-softer);
+}
+
+.pw-save-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.pw-save-world {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-primary);
+  cursor: text;
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background 0.15s;
+}
+.pw-save-world:hover {
+  background: rgba(255,255,255,0.04);
+}
+.pw-save-world:focus {
+  outline: 1px solid var(--color-border-glow);
+  background: rgba(255,255,255,0.06);
+}
+.pw-save-status {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+}
+.pw-save-status.ongoing {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.pw-save-status.ended {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.pw-save-chars {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+.pw-save-preview {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pw-save-meta {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  opacity: 0.5;
+  margin-top: 8px;
+}
+.pw-save-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.pw-save-actions button {
+  font-size: 12px;
+  padding: 5px 12px;
+}
+
+/* ---------------- 空状态 ---------------- */
+.pw-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  gap: 12px;
+}
+.pw-empty svg {
+  width: 64px;
+  height: 64px;
+  opacity: 0.3;
+}
+.pw-empty p {
+  font-size: 15px;
+  opacity: 0.6;
+}
+
+/* ---------------- 游戏界面 ---------------- */
+.pw-game-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 剧情文本三层次 */
+.pw-story-block {
+  animation: pwFadeIn 0.4s ease;
+}
+@keyframes pwFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pw-narration {
+  color: var(--color-text-muted);
+  opacity: 0.55;
+  font-style: italic;
+  line-height: 1.8;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.pw-his-words {
+  color: var(--color-text);
+  font-weight: 500;
+  line-height: 1.9;
+  font-size: 15px;
+}
+
+.pw-my-desc {
+  color: var(--color-accent);
+  opacity: 0.85;
+  line-height: 1.8;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+/* 分隔线 */
+.pw-separator {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  opacity: 0.4;
+  margin: 4px 0;
+}
+
+/* ---------------- 选项面板 ---------------- */
+.pw-choice-panel {
+  padding: 12px 16px 16px;
+  background: var(--color-surface-translucent);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pw-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pw-option-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+  text-align: center;
+}
+.pw-option-btn:hover {
+  background: rgba(79, 217, 200, 0.25);
+  border-color: var(--color-border-glow);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.pw-free-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pw-free-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: rgba(240, 248, 255, 0.06);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.pw-free-input:focus {
+  border-color: var(--color-border-glow);
+}
+.pw-free-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.5;
+}
+
+.pw-free-send {
+  padding: 10px 16px;
+  font-size: 14px;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: 600;
+  transition: box-shadow 0.2s;
+  white-space: nowrap;
+}
+.pw-free-send:hover {
+  box-shadow: var(--shadow-glow-primary);
+}
+.pw-free-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------------- 结局弹窗 ---------------- */
+.pw-ending-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pwFadeIn 0.5s ease;
+}
+
+.pw-ending-modal {
+  background: var(--color-surface-translucent-strong);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid var(--color-border-glow);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: var(--shadow-soft), var(--shadow-glow-accent);
+}
+
+.pw-ending-label {
+  font-size: 13px;
+  color: var(--color-gold);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.pw-ending-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 16px;
+}
+.pw-ending-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+.pw-ending-btn {
+  padding: 10px 28px;
+  font-size: 15px;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-weight: 600;
+  transition: box-shadow 0.2s;
+}
+.pw-ending-btn:hover {
+  box-shadow: var(--shadow-glow-primary);
+}
+
+/* ---------------- 新建剧情弹窗 ---------------- */
+.pw-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pwFadeIn 0.3s ease;
+}
+
+.pw-modal {
+  background: var(--color-surface-translucent-strong);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 560px;
+  width: 92%;
+  max-height: 85vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+  box-shadow: var(--shadow-soft);
+}
+.pw-modal::-webkit-scrollbar { display: none; }
+
+.pw-modal h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.pw-form-group {
+  margin-bottom: 16px;
+}
+.pw-form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  opacity: 0.65;
+}
+.pw-form-group input,
+.pw-form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: rgba(240, 248, 255, 0.06);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.pw-form-group input:focus,
+.pw-form-group textarea:focus {
+  border-color: var(--color-border-glow);
+}
+.pw-form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+.pw-form-row {
+  display: flex;
+  gap: 10px;
+}
+.pw-form-row .pw-form-group {
+  flex: 1;
+}
+.pw-form-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-gold);
+  margin: 20px 0 6px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-border);
+}
+.pw-required {
+  color: var(--color-gold);
+  font-weight: 400;
+}
+
+/* ---- 头像行 ---- */
+.pw-avatar-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin: 8px 0;
+}
+.pw-char-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.pw-char-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-softer);
+  flex-shrink: 0;
+}
+.pw-char-avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.pw-char-avatar .avatar-fallback {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 700;
+}
+.pw-char-side textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.pw-char-side textarea:focus {
+  border-color: var(--color-border-glow);
+}
+
+/* ---- 连线 + 关系文字 ---- */
+.pw-connection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 28px;
+  width: 80px;
+  flex-shrink: 0;
+}
+.pw-relation-text {
+  width: 100%;
+  padding: 2px 0;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-family: var(--font-family);
+  text-align: center;
+  outline: none;
+  margin-bottom: 4px;
+}
+.pw-relation-text:focus {
+  color: var(--color-text);
+}
+.pw-relation-text::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.4;
+}
+.pw-connection-line {
+  width: 100%;
+  height: 1px;
+  background: var(--color-border-strong);
+}
+
+.pw-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+/* ---------------- Topbar 按钮 ---------------- */
+.pw-topbar-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: var(--font-family);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pw-topbar-btn:hover {
+  border-color: var(--color-border-glow);
+  box-shadow: var(--shadow-softer);
+}
+.pw-topbar-btn.end-btn {
+  color: var(--color-accent);
+  border-color: rgba(255, 159, 192, 0.3);
+}
+.pw-topbar-btn.end-btn:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-glow-accent);
+}
+
+/* ---------------- 提示文字 ---------------- */
+.pw-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  opacity: 0.5;
+  text-align: center;
+  padding: 8px;
+}
+
+/* ---------------- 打字指示器 ---------------- */
+.pw-typing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 0;
+}
+.pw-typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  animation: pwTyping 1.4s ease-in-out infinite;
+}
+.pw-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.pw-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pwTyping {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+</style>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#050a14" />
+  <link rel="stylesheet" href="css/design-system.css?v=2">
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <button id="menu-btn" class="menu-btn">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+  </button>
+  <div class="title" id="pw-title">平行世界</div>
+  <div style="display:flex;gap:8px;">
+    <button id="pw-end-btn" class="pw-topbar-btn end-btn" style="display:none;" title="结束当前剧情">结束剧情</button>
+    <button id="pw-back-btn" class="pw-topbar-btn" style="display:none;" title="返回存档列表">← 返回</button>
+    <button id="pw-new-btn" class="pw-topbar-btn" title="新建剧情">+ 新建</button>
+  </div>
+</div>
+
+<!-- Nav Drawer -->
+<div id="drawer-overlay" class="drawer-overlay"></div>
+<div id="nav-drawer" class="nav-drawer">
+  <div class="drawer-header">
+    <div class="drawer-user-info">
+      <div class="drawer-logo">
+      <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+      </svg>
+    </div>
+      <div class="drawer-title">CyberSea</div>
+    </div>
+  </div>
+  <nav class="drawer-nav">
+    <a href="index.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></i><span>聊天</span></a>
+    <a href="persona.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></i><span>角色设定</span></a>
+    <a href="anniversary.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></i><span>纪念日</span></a>
+    <a href="calendar.html" class="nav-item"><i><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></i><span>日历</span></a>
+    <a href="ledger.html" class="nav-item"><i><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></i><span>记账本</span></a>
+    <a href="album.html" class="nav-item"><i><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></i><span>相册</span></a>
+    <a href="plan.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></i><span>专属计划</span></a>
+    <a href="moments.html" class="nav-item"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg></i><span>朋友圈</span></a>
+      <a href="bookshelf.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><path d="M10 9h4"></path><path d="M10 13h2"></path></svg></i><span>书架</span></a>
+    <a href="memoryBank.html" class="nav-item"><i><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg></i><span>记忆库</span></a>
+    <a href="letters.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><polyline points="2 4 12 13 22 4"></polyline></svg></i><span>信箱</span></a>
+    <a href="parallelWorld.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20"></path><path d="M2 12h20"></path></svg></i><span>平行世界</span></a>
+	    <a href="settings.html" class="nav-item"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></i><span>设置</span></a>
+  </nav>
+</div>
+
+<!-- ========== 存档列表视图 ========== -->
+<div id="pw-list-view" class="pw-view active">
+  <div class="pw-save-list" id="pw-save-list"></div>
+  <div class="pw-empty" id="pw-empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M12 2a14.5 14.5 0 0 0 0 20"></path>
+      <path d="M2 12h20"></path>
+    </svg>
+    <p>还没有剧情存档</p>
+    <p style="font-size:13px;opacity:0.4;">点击右上角 "+ 新建" 开始一段新故事</p>
+  </div>
+</div>
+
+<!-- ========== 游戏视图 ========== -->
+<div id="pw-game-view" class="pw-view">
+  <div class="pw-game-area" id="pw-game-area"></div>
+  <div class="pw-choice-panel" id="pw-choice-panel" style="display:none;">
+    <div class="pw-options" id="pw-options"></div>
+    <div class="pw-free-input-row">
+      <input type="text" class="pw-free-input" id="pw-free-input" maxlength="500" />
+      <button class="pw-free-send" id="pw-free-send">发送</button>
+    </div>
+    <div class="pw-hint">选择选项或自由输入来推进剧情</div>
+  </div>
+</div>
+
+<!-- ========== 新建剧情弹窗 ========== -->
+<div id="pw-new-modal-overlay" class="pw-modal-overlay" style="display:none;">
+  <div class="pw-modal">
+    <h3>新建平行世界</h3>
+
+    <!-- 标题 -->
+    <div class="pw-form-section-title">标题</div>
+    <div class="pw-form-group">
+      <input type="text" id="pw-new-title" maxlength="50" placeholder="给这个故事起个名字">
+    </div>
+
+    <!-- 世界观 -->
+    <div class="pw-form-section-title">世界观 <span class="pw-required">*</span></div>
+    <div class="pw-form-group">
+      <textarea id="pw-new-world" maxlength="300" rows="2" placeholder="例如：赛博朋克都市、中世纪奇幻大陆..."></textarea>
+    </div>
+
+    <!-- 头像行 + 身份 -->
+    <div class="pw-form-section-title">角色设定 <span class="pw-required">*</span></div>
+    <div class="pw-avatar-row">
+      <div class="pw-char-side">
+        <div class="pw-char-avatar" id="pw-my-avatar"></div>
+        <textarea id="pw-new-my-desc" maxlength="300" rows="2" placeholder="我的身份..."></textarea>
+      </div>
+
+      <div class="pw-connection">
+        <div class="pw-connection-line"></div>
+        <input type="text" class="pw-relation-text" id="pw-new-relation" maxlength="20" placeholder="关系">
+      </div>
+
+      <div class="pw-char-side">
+        <div class="pw-char-avatar" id="pw-his-avatar"></div>
+        <textarea id="pw-new-his-desc" maxlength="300" rows="2" placeholder="他的身份..."></textarea>
+      </div>
+    </div>
+
+    <!-- 过往经历（选填） -->
+    <div class="pw-form-section-title">过往经历</div>
+    <div class="pw-form-group">
+      <textarea id="pw-new-past" maxlength="500" rows="2" placeholder="相识的经历、共同的回忆..."></textarea>
+    </div>
+
+    <!-- 开场情境（选填） -->
+    <div class="pw-form-section-title">开场情境</div>
+    <div class="pw-form-group">
+      <label>留空则由AI自动生成开场</label>
+      <textarea id="pw-new-opening" maxlength="300"></textarea>
+    </div>
+
+    <div class="pw-modal-actions">
+      <button class="btn-secondary" id="pw-new-cancel">取消</button>
+      <button class="btn-primary" id="pw-new-submit">开始故事</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 结局弹窗 ========== -->
+<div id="pw-ending-overlay" class="pw-ending-overlay" style="display:none;">
+  <div class="pw-ending-modal">
+    <div class="pw-ending-icon"></div>
+    <div class="pw-ending-label">剧 情 完 结</div>
+    <div class="pw-ending-name" id="pw-ending-name"></div>
+    <p style="font-size:14px;color:var(--color-text-muted);margin-bottom:20px;">你们的故事在这个世界告一段落。<br>但平行世界里，还有无数种可能。</p>
+    <button class="pw-ending-btn" id="pw-ending-ok">返回存档列表</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/avatar.js"></script>
+<script src="js/parallelWorld.js"></script>
+<script src="js/nav.js?v=6"></script>
+<script src="js/octopus-widget.js"></script>
+<script src="js/deepsea-particles.js"></script>
+
+</body>
+</html>

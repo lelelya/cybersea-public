@@ -1,0 +1,33 @@
+const express=require('express');
+const {getMemoryService}=require('./service');
+function createRouter(service=getMemoryService()) {
+ const router=express.Router();
+ const ctx=r=>({actor:'user',operation_key:r.get('Idempotency-Key')||r.body?.operation_key});
+ const route=(method,path,fn,status=200)=>router[method](path,async(r,res)=>{try{res.status(status).json(await fn(r));}catch(e){if(!e.status)console.error('[记忆API]',e);res.status(e.status||500).json({error:e.status?e.message:'记忆服务暂时不可用',code:e.code||'MEMORY_ERROR',details:e.status?e.details:undefined});}});
+ route('get','/profile',()=>service.getProfile());
+ route('post','/profile/items',r=>service.write('profile_item',{...r.body,op:'add_item'},ctx(r)),201);
+ route('patch','/profile/items/:id',r=>service.write('profile_item',{...r.body,op:'update_item',item_id:r.params.id},ctx(r)));
+ route('post','/profile/items/:id/archive',r=>service.write('profile_item',{op:'archive_item',item_id:r.params.id,expected_revision:r.body.expected_revision},ctx(r)));
+ route('delete','/profile/items/:id',r=>service.purge('profile_item',r.params.id,r.body.expected_revision));
+ route('put','/profile',r=>service.replaceProfileSections(r.body.sections,ctx(r)));
+ route('put','/profile/:key',r=>service.replaceProfileSections([{...r.body,section_key:r.params.key}],ctx(r)));
+ route('get','/changes',r=>service.changes(r.query));
+ route('post','/changes/:id/accept',r=>service.acceptChange(r.params.id,r.body.expected_revision));
+ route('post','/changes/:id/reject',r=>service.rejectChange(r.params.id));
+ route('post','/changes/:id/revert',r=>service.revertChange(r.params.id,r.body.expected_revision));
+ route('get','/events',r=>{let dateFrom=r.query.date_from,dateTo=r.query.date_to;if(r.query.year&&r.query.month){const year=Number(r.query.year),month=Number(r.query.month);dateFrom=`${year}-${String(month).padStart(2,'0')}-01`;dateTo=new Date(Date.UTC(year,month,0)).toISOString().slice(0,10);}const found=service.searchMemories({...r.query,query:r.query.q,type:'event',dateFrom,dateTo,includeReview:true});return {events:found.items.map(x=>x.item),has_more:found.has_more,next_cursor:found.next_cursor};});
+ route('post','/events',r=>service.write('event',{...r.body,op:'create'},ctx(r)).item,201);
+ route('put','/events/:id',r=>service.write('event',{...r.body,op:'update_item',id:r.params.id},ctx(r)).item);
+ route('delete','/events/:id',r=>service.purge('event',r.params.id,r.body.expected_revision));
+ route('get','/search',r=>service.searchMemories({...r.query,query:r.query.q,dateFrom:r.query.date_from,dateTo:r.query.date_to}));
+ route('get','/detail/:type/:id',r=>service.readMemory(r.params.type,r.params.id,r.query));
+ route('get','/sources/:id',r=>service.getSource(r.params.id));
+ route('get','/source-impact',r=>service.sourceImpact(r.query.message_id));
+ route('get','/settings',()=>service.settings());route('put','/settings',r=>service.setSettings(r.body));route('get','/status',()=>service.status());
+ route('post','/summarize',r=>service.enqueueMaintenance(r.body||{}),202);
+ route('post','/backfill',r=>service.enqueueMaintenance({...r.body,mode:'backfill'}),202);
+ route('get','/jobs',r=>service.listJobs(r.query));route('post','/jobs/:id/retry',r=>service.retryJob(r.params.id),202);
+ route('post','/import',r=>service.importData(r.body.data??r.body,{mode:r.body.mode||'append',revisions:r.body.revisions||{}}));
+ return router;
+}
+module.exports=createRouter();module.exports.createRouter=createRouter;

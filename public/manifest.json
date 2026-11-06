@@ -1,0 +1,23 @@
+{
+  "name": "CyberSea",
+  "short_name": "CyberSea",
+  "description": "深海主题 AI 陪伴聊天",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#050a14",
+  "theme_color": "#00d4aa",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

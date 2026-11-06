@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('cybersea_theme')||'deep-sea')</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>档案</title>
+  <script src="js/shared.js"></script>
+<script src="js/bgm-player.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/effects.css" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#050a14" />
+  <link rel="stylesheet" href="css/design-system.css?v=2">
+</head>
+<body>
+  <div class="topbar">
+    <button id="menu-btn" class="menu-btn">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <div class="title">档案</div>
+    <div style="width: 24px"></div>
+  </div>
+
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <div id="nav-drawer" class="nav-drawer">
+    <div class="drawer-header">
+      <div class="drawer-user-info">
+        <div class="drawer-logo">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+        </svg>
+      </div>
+        <div class="drawer-title">CyberSea</div>
+      </div>
+    </div>
+    <nav class="drawer-nav">
+      <a href="index.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></i><span>聊天</span></a>
+      <a href="persona.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></i><span>角色设定</span></a>
+      <a href="anniversary.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></i><span>纪念日</span></a>
+      <a href="calendar.html" class="nav-item"><i><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></i><span>日历</span></a>
+      <a href="ledger.html" class="nav-item"><i><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></i><span>记账本</span></a>
+      <a href="album.html" class="nav-item"><i><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></i><span>相册</span></a>
+      <a href="plan.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></i><span>专属计划</span></a>
+      <a href="moments.html" class="nav-item"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg></i><span>朋友圈</span></a>
+      <a href="bookshelf.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><path d="M10 9h4"></path><path d="M10 13h2"></path></svg></i><span>书架</span></a>
+      <a href="memoryBank.html" class="nav-item"><i><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg></i><span>记忆库</span></a>
+      <a href="letters.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><polyline points="2 4 12 13 22 4"></polyline></svg></i><span>信箱</span></a>
+      <a href="parallelWorld.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20"></path><path d="M2 12h20"></path></svg></i><span>平行世界</span></a>
+      <a href="settings.html" class="nav-item"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></i><span>设置</span></a>
+    </nav>
+  </div>
+
+  <main class="persona-scroll">
+  <!-- 双人学生证容器 -->
+  <div class="id-cards">
+
+    <!-- ========== AI 学生证 ========== -->
+    <div class="id-card">
+      <div class="id-card-portrait">
+        <button class="id-toggle-btn" id="ai-toggle" title="切换外貌描述">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="17 1 21 5 17 9"></polyline>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+            <polyline points="7 23 3 19 7 15"></polyline>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+          </svg>
+        </button>
+        <button type="button" class="id-portrait-picker" id="ai-portrait-picker" aria-label="导入AI立绘" title="点击导入或更换立绘">
+          <img class="id-portrait-img" id="ai-portrait-img" alt="AI立绘" hidden />
+          <span class="id-portrait-placeholder" id="ai-portrait-placeholder"><span class="id-portrait-plus" aria-hidden="true">+</span><span>导入立绘</span></span>
+        </button>
+        <input type="file" id="ai-portrait-input" accept="image/png,image/jpeg,image/gif,image/webp" hidden />
+        <div class="id-appearance-panel" id="ai-appearance-panel" style="display:none">
+          <textarea id="ai_appearance" class="id-appearance-textarea" rows="6"></textarea>
+        </div>
+      </div>
+
+      <div class="id-card-fields">
+        <div class="id-field-row">
+          <label class="id-field-label">姓名</label>
+          <span id="ai_name_display" class="id-field-display"></span>
+          <input type="text" id="ai_name" class="id-field-input" style="display:none" />
+          <button class="id-edit-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+        </div>
+        <div class="id-field-row">
+          <label class="id-field-label">性别</label>
+          <span id="ai_gender_display" class="id-field-display"></span>
+          <input type="text" id="ai_gender" class="id-field-input" style="display:none" />
+          <button class="id-edit-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+        </div>
+        <div class="id-field-row">
+          <label class="id-field-label">身高</label>
+          <span id="ai_height_display" class="id-field-display"></span>
+          <input type="text" id="ai_height" class="id-field-input" style="display:none" />
+          <button class="id-edit-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+        </div>
+        <div class="id-field-row">
+          <label class="id-field-label">年龄</label>
+          <span id="ai_age_display" class="id-field-display"></span>
+          <input type="text" id="ai_age" class="id-field-input" style="display:none" />
+          <button class="id-edit-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+        </div>
+        <div class="id-field-row">
+          <label class="id-field-label">生日</label>
+          <span id="ai_birthday_display" class="id-field-display"></span>
+          <input type="text" id="ai_birthday" class="id-field-input" style="display:none" />
+          <button class="id-edit-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 用户学生证 ========== -->
+    <div class="id-card">
+      <div class="id-card-portrait">
+        <button class="id-toggle-btn" id="user-toggle" title="切换外貌描述">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="17 1 21 5 17 9"></polyline>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+            <polyline points="7 23 3 19 7 15"></polyline>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+          </svg>
+        </button>
+        <button type="button" class="id-portrait-picker" id="user-portrait-picker" aria-label="导入用户立绘" title="点击导入或更换立绘">
+          <img class="id-portrait-img" id="user-portrait-img" alt="用户立绘" hidden />
+          <span class="id-portrait-placeholder" id="user-portrait-placeholder"><span class="id-portrait-plus" aria-hidden="true">+</span><span>导入立绘</span></span>
+        </button>
+        <input type="file" id="user-portrait-input" accept="image/png,image/jpeg,image/gif,image/webp" hidden />
+        <div class="id-appearance-panel" id="user-appearance-panel" style="display:none">
+          <textarea id="user_appearance" class="id-appearance-textarea" rows="6"></textarea>
+        </div>
+      </div>
+
+      <div class="id-card-fields">
+        <div class="id-field-row">
+          <label class="id-field-label">姓名</label>
+          <span id="user_name_display" class="id-field-display"></span>
+          <input type="text" id="user_name" class="id-field-input" style="display:none" />
+          <button class="id-edit-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+        </div>
+        <div class="id-field-row">
+          <label class="id-field-label">性别</label>
+          <span id="user_gender_display" class="id-field-display"></span>
+          <input type="text" id="user_gender" class="id-field-input" style="display:none" />
+          <button class="id-edit-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+        </div>
+        <div class="id-field-row">
+          <label class="id-field-label">身高</label>
+          <span id="user_height_display" class="id-field-display"></span>
+          <input type="text" id="user_height" class="id-field-input" style="display:none" />
+          <button class="id-edit-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+        </div>
+        <div class="id-field-row">
+          <label class="id-field-label">年龄</label>
+          <span id="user_age_display" class="id-field-display"></span>
+          <input type="text" id="user_age" class="id-field-input" style="display:none" />
+          <button class="id-edit-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+        </div>
+        <div class="id-field-row">
+          <label class="id-field-label">生日</label>
+          <span id="user_birthday_display" class="id-field-display"></span>
+          <input type="text" id="user_birthday" class="id-field-input" style="display:none" />
+          <button class="id-edit-btn"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 补充设定 -->
+  <div style="max-width:1200px;margin:0 auto;padding:0 24px 24px;width:100%;box-sizing:border-box;">
+    <div style="display:flex;justify-content:flex-start;margin-bottom:6px;">
+      <button id="add-fixed-btn" title="添加" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--color-border);background:none;color:var(--color-text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;transition:all 0.2s;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div id="fixed-settings-list" style="width:100%;"></div>
+    <style>
+      .fixed-item:hover .fixed-del-btn { opacity: 0.5 !important; }
+      .fixed-item .fixed-del-btn:hover { opacity: 1 !important; color: var(--color-danger) !important; }
+    </style>
+  </div>
+
+  </main>
+  <div class="toast" id="toast"></div>
+
+  <script src="js/persona.js"></script>
+  <script src="js/nav.js?v=6"></script>
+  <script src="js/octopus-widget.js"></script>
+<script src="js/deepsea-particles.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('cybersea_theme')||'deep-sea')</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>聊天</title>
+  <script src="js/shared.js"></script>
+<script src="js/bgm-player.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/effects.css" />
+<style>
+  /* 聊天页三点菜单 */
+  .chat-menu-wrap { position: relative; }
+  .chat-menu-btn {
+    background: none; border: none; color: var(--color-text-muted);
+    cursor: pointer; padding: 4px; display: flex; align-items: center;
+    justify-content: center; border-radius: var(--radius-sm); transition: all 0.2s;
+  }
+  .chat-menu-btn:hover { color: var(--color-text); background: var(--color-primary-soft); }
+  .chat-menu-dropdown {
+    position: fixed; min-width: 150px;
+    background: var(--color-surface-translucent-strong);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--color-border-strong); border-radius: var(--radius-md);
+    padding: 6px; display: none; flex-direction: column; gap: 2px;
+    z-index: 9999; box-shadow: var(--shadow-soft);
+  }
+  .chat-menu-dropdown.show { display: flex; }
+  .chat-menu-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border-radius: var(--radius-sm); color: var(--color-text);
+    text-decoration: none; font-size: 14px; font-family: var(--font-family);
+    transition: all 0.15s;
+  }
+  .chat-menu-item:hover { background: var(--color-primary-soft); color: var(--color-primary); }
+  .chat-menu-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+/* 备注编辑铅笔图标 */
+#chat-remark-btn {
+  cursor: pointer; opacity: 0.7; flex-shrink: 0;
+  color: var(--color-text-muted); transition: opacity 0.2s;
+}
+#chat-remark-btn:hover { opacity: 1; color: var(--color-primary); }
+
+/* 备注内联编辑输入框 */
+#chat-remark-input {
+  font-size: 16px; font-weight: 700; color: var(--color-text);
+  background: transparent; border: none; border-bottom: 1px solid rgba(79, 217, 200, 0.3);
+  outline: none; font-family: var(--font-family); padding: 0; width: 120px;
+}
+</style>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#050a14" />
+  <link rel="stylesheet" href="css/design-system.css?v=2">
+</head>
+<body>
+  <div class="topbar">
+    <button id="menu-btn" class="menu-btn">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <div class="title" id="chat-title" style="display:flex;align-items:center;gap:6px;cursor:default;">
+      <span id="chat-title-text">聊天</span>
+      <svg id="chat-remark-btn" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" title="设置备注"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+    </div>
+    <button id="home-mode-btn" class="home-mode-btn" title="回家">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </button>
+    <div class="chat-menu-wrap">
+      <button id="chat-menu-btn" class="chat-menu-btn" title="更多">
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" width="20" height="20">
+          <circle cx="12" cy="5" r="2"></circle>
+          <circle cx="12" cy="12" r="2"></circle>
+          <circle cx="12" cy="19" r="2"></circle>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 下拉菜单（放在 topbar 外面，避免 backdrop-filter 层叠上下文问题） -->
+  <div class="chat-menu-dropdown" id="chat-menu-dropdown">
+    <a class="chat-menu-item" href="searchHistory.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <span>聊天记录</span>
+    </a>
+    <a class="chat-menu-item" href="imageRecords.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+      <span>图片记录</span>
+    </a>
+    <a class="chat-menu-item" href="voiceCall.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+      <span>通话记录</span>
+    </a>
+  </div>
+
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <div id="nav-drawer" class="nav-drawer">
+    <div class="drawer-header">
+      <div class="drawer-user-info">
+        <div class="drawer-logo">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+        </svg>
+      </div>
+        <div class="drawer-title">CyberSea</div>
+      </div>
+    </div>
+    <nav class="drawer-nav">
+      <a href="index.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></i><span>聊天</span></a>
+      <a href="persona.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></i><span>角色设定</span></a>
+      <a href="anniversary.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></i><span>纪念日</span></a>
+      <a href="calendar.html" class="nav-item"><i><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></i><span>日历</span></a>
+      <a href="ledger.html" class="nav-item"><i><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></i><span>记账本</span></a>
+      <a href="album.html" class="nav-item"><i><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></i><span>相册</span></a>
+      <a href="plan.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></i><span>专属计划</span></a>
+      <a href="moments.html" class="nav-item"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg></i><span>朋友圈</span></a>
+      <a href="bookshelf.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><path d="M10 9h4"></path><path d="M10 13h2"></path></svg></i><span>书架</span></a>
+      <a href="memoryBank.html" class="nav-item"><i><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg></i><span>记忆库</span></a>
+      <a href="letters.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><polyline points="2 4 12 13 22 4"></polyline></svg></i><span>信箱</span></a>
+      <a href="parallelWorld.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20"></path><path d="M2 12h20"></path></svg></i><span>平行世界</span></a>
+      <a href="settings.html" class="nav-item"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></i><span>设置</span></a>
+    </nav>
+  </div>
+
+  </div>
+
+  <div id="chat-container"></div>
+
+  <div id="bottom-bar-area">
+    <div id="input-bar">
+      <button id="mic-btn" class="input-extra-btn" title="语音消息">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+      <input type="file" id="img-file-input" accept="image/*" style="display:none" />
+      <textarea id="msg-input"></textarea>
+      <button id="sticker-btn" class="input-extra-btn" title="表情包">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+      </button>
+      <button id="plus-btn" class="input-extra-btn" title="更多功能">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <button id="send-btn">发送</button>
+    </div>
+    <div id="recording-bar" style="display:none">
+      <span class="recording-dot"></span>
+      <span id="recording-timer">0:00</span>
+      <span class="recording-hint">点击麦克风结束录音</span>
+    </div>
+
+    <!-- 加号面板：输入框下方展开，输入框随之上移 -->
+    <div id="plus-panel" class="plus-panel">
+      <div class="plus-panel-grid">
+        <div class="plus-item" data-action="image">
+          <div class="plus-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </div>
+          <div class="plus-label">发图片</div>
+        </div>
+        <div class="plus-item" data-action="voice_call">
+          <div class="plus-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </div>
+          <div class="plus-label">语音通话</div>
+        </div>
+        <div class="plus-item" data-action="red_packet">
+          <div class="plus-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="4" width="14" height="18" rx="2"/>
+              <path d="M5 9l7 5 7-5"/>
+            </svg>
+          </div>
+          <div class="plus-label">发红包</div>
+        </div>
+        <div class="plus-item" data-action="food_delivery">
+          <div class="plus-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+              <line x1="6" y1="1" x2="6" y2="4"/>
+              <line x1="10" y1="1" x2="10" y2="4"/>
+              <line x1="14" y1="1" x2="14" y2="4"/>
+            </svg>
+          </div>
+          <div class="plus-label">点外卖</div>
+        </div>
+        <div class="plus-item" data-action="gift">
+          <div class="plus-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 12 20 22 4 22 4 12"/>
+              <rect x="2" y="7" width="20" height="5"/>
+              <line x1="12" y1="22" x2="12" y2="7"/>
+              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+            </svg>
+          </div>
+          <div class="plus-label">送礼物</div>
+        </div>
+        <div class="plus-item" data-action="favorites">
+          <div class="plus-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <div class="plus-label">收藏</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 表情包面板 -->
+  <div id="sticker-panel" class="sticker-panel">
+    <div class="sticker-panel-grid" id="sticker-grid"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- 表情包命名弹窗 -->
+  <div class="modal-overlay" id="sticker-name-modal" style="display:none; z-index:10000;">
+    <div class="modal-card" style="width:300px;">
+      <div class="modal-title">给表情起个名字</div>
+      <p style="font-size:0.75rem;color:var(--color-text-muted);margin:0 0 8px;">如"难过"、"撒娇"、"开心"——AI 也会看到</p>
+      <input class="modal-input" id="sticker-name-input" placeholder="表情名，不超过20字" maxlength="20" />
+      <div class="modal-actions">
+        <button class="btn-ghost btn-ghost-sm" id="sticker-name-cancel">取消</button>
+        <button class="btn-ghost btn-ghost-sm" id="sticker-name-confirm" style="color:var(--color-primary);">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 家设定编辑弹窗 -->
+  <div class="modal-overlay" id="home-desc-modal" style="display:none; z-index:10000;">
+    <div class="modal-card" style="width:420px; max-width:90vw;">
+      <div class="modal-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> 布置我们的家</div>
+      <p style="font-size:0.8rem;color:var(--color-text-muted);margin:0 0 8px;">
+        描述家里的基本情况，比如有什么家具、房间是什么样的、窗外是什么景色。AI 会根据这些生成环境描写。
+      </p>
+      <textarea id="home-desc-input" class="modal-input" rows="5" placeholder="例如：一个小小的深海舱室，客厅里有一张软沙发、一台老电视、一个书架，窗外是深蓝色的海水和发光的珊瑚…"></textarea>
+      <div class="modal-actions">
+        <button class="btn-ghost btn-ghost-sm" id="home-desc-cancel">取消</button>
+        <button class="btn-ghost btn-ghost-sm" id="home-desc-save" style="color:var(--color-primary);">保存并刷新环境描写</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    var btn = document.getElementById('chat-menu-btn');
+    var dropdown = document.getElementById('chat-menu-dropdown');
+    if (btn && dropdown) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var rect = btn.getBoundingClientRect();
+        dropdown.style.top = (rect.bottom + 6) + 'px';
+        dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+        dropdown.classList.toggle('show');
+      });
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.chat-menu-wrap') && !e.target.closest('.chat-menu-dropdown')) {
+          dropdown.classList.remove('show');
+        }
+      });
+      window.addEventListener('resize', function() {
+        dropdown.classList.remove('show');
+      });
+    }
+  })();
+  </script>
+  <script src="js/wsClient.js"></script>
+  <script src="js/tts.js"></script>
+  <script src="js/avatar.js"></script>
+  <script src="js/chat.js"></script>
+<script src="js/nav.js?v=6"></script>
+<script src="js/octopus-widget.js"></script>
+<script src="js/deepsea-particles.js"></script>
+<script>
+// Service Worker 注册 + Web Push 订阅
+(function() {
+  if (!('serviceWorker' in navigator)) return;
+
+  // 注册 sw.js
+  navigator.serviceWorker.register('/sw.js').catch(function() {});
+
+  // WebSocket 主动消息处理
+  function handleProactiveMsg(msg) {
+    if (!msg || !msg.message) return;
+    // 调用 chat.js 的渲染逻辑（如果页面在聊天视图）
+    if (typeof renderProactiveMessage === 'function') {
+      renderProactiveMessage(msg.message);
+    }
+  }
+
+  // 等 wsClient 就绪后注册监听
+  var checkWs = setInterval(function() {
+    if (window.wsClient && window.wsClient.on) {
+      clearInterval(checkWs);
+      window.wsClient.on('proactive_message', handleProactiveMsg);
+    }
+  }, 500);
+})();
+</script>
+
+</body>
+</html>

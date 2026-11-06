@@ -1,0 +1,139 @@
+/* ============================================================
+   CyberSea 深海玻璃风 · 主题层
+   ------------------------------------------------------------
+   这是唯一需要整体替换即可换肤的文件。
+   所有变量集中在 :root 里，下面（以及 style.css）的所有规则
+   只引用这些变量，不直接写死颜色值。
+   以后想换风格：换掉本文件的 :root 区块（或整份文件）即可，
+   不需要动 style.css 的结构规则，更不需要动任何 .js / server 代码。
+   ============================================================ */
+:root, [data-theme="deep-sea"] {
+  /* ---------------- 深海配色 ---------------- */
+  --color-bg-top: #020409;              /* 页面渐变：几乎纯黑，带一丝极暗蓝 */
+  --color-bg-mid: #04060c;              /* 中段过渡：极深墨色 */
+  --color-bg-bottom: #050812;           /* 渐变底部：微微显现深邃暗蓝 */
+
+  --color-surface: #0a0e1c;             /* 不透明场景兜底表面色 */
+  --color-bg-alt: #080b16;              /* 次级背景：比表面色稍暗 */
+  --color-surface-translucent: rgba(10, 14, 28, 0.55);       /* 毛玻璃卡片/导航栏 */
+  --color-surface-translucent-strong: rgba(12, 18, 34, 0.75);
+
+  --color-primary: #4fd9c8;             /* 强调色：荧光青 */
+  --color-primary-hover: #6ee8d8;
+  --color-primary-soft: rgba(79, 217, 200, 0.16);
+  --color-primary-glow: rgba(79, 217, 200, 0.5);
+  --color-accent: #ff9fc0;              /* 次强调：珊瑚粉 */
+  --color-accent-soft: rgba(255, 159, 192, 0.18);
+  --color-gold: #f4d58d;                /* 点缀：星光金 */
+  --color-gold-soft: rgba(244, 213, 141, 0.18);
+
+  --color-text: #eaf1ff;                /* 主文字：浅蓝白 */
+  --color-text-muted: #9db0d8;          /* 次要文字：雾蓝灰 */
+  --color-text-on-primary: #0d1b3e;     /* 荧光色底上的文字（深色，保证可读） */
+
+  --color-border: rgba(160, 200, 255, 0.16);
+  --color-border-strong: rgba(160, 200, 255, 0.30);
+  --color-border-glow: rgba(79, 217, 200, 0.45);
+
+  --color-danger: #ff8a8a;
+  --color-danger-soft: rgba(255, 138, 138, 0.16);
+  --color-success: #7ee0b8;
+
+  /* ---------------- iOS 液态玻璃质感 ---------------- */
+  /* 卡片投影 + 顶部内高光（模拟光线打在上边缘） */
+  --shadow-soft: 0 8px 28px rgba(5, 10, 30, 0.5),
+                0 0 0 1px rgba(160, 200, 255, 0.06) inset,
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-softer: 0 4px 16px rgba(5, 10, 30, 0.35);
+  --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.2),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-glow-primary: 0 0 16px rgba(79, 217, 200, 0.40);
+  --shadow-glow-accent: 0 0 14px rgba(255, 159, 192, 0.32);
+
+  --blur-glass: 16px;
+
+  /* blur + saturate 是液态玻璃秘密配方，saturate 让背后颜色更鲜艳通透 */
+  --glass-filter: blur(16px) saturate(160%);
+  --glass-filter-strong: blur(20px) saturate(180%);
+  --glass-filter-light: blur(10px) saturate(140%);
+
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --radius-pill: 999px;
+
+  --font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+
+  /* 背景与装饰 */
+  --bg-image: url("../images/deep-sea-bg.png");     /* 页面背景图 */
+  --bg-gradient: linear-gradient(180deg, #020409 0%, #04060c 40%, #050812 100%);
+
+  /* 滚动条 */
+  --scrollbar-track-bg: rgba(20, 28, 56, 0.35);
+  --scrollbar-thumb-from: rgba(79, 217, 200, 0.55);
+  --scrollbar-thumb-to: rgba(255, 159, 192, 0.45);
+  --scrollbar-thumb-hover-from: rgba(79, 217, 200, 0.8);
+  --scrollbar-thumb-hover-to: rgba(255, 159, 192, 0.65);
+
+  /* 聊天气泡 — 液态玻璃质感 */
+  --bubble-user-bg: rgba(240, 248, 255, 0.06);
+  --bubble-ai-bg: rgba(240, 248, 255, 0.04);
+  /* 多层阴影：底部深度 + 顶部内高光（光源从左上打来） */
+  --bubble-shadow: 0 2px 8px rgba(0, 0, 0, 0.25),
+                   0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+                   inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  /* 定向边框：上/左稍亮，下/右隐去（模拟玻璃边缘受光） */
+  --bubble-border: 1px solid rgba(255, 255, 255, 0.08);
+  --text-color: rgba(234, 241, 255, 0.85);
+}
+
+/* ---------------- 全局背景（由主题变量控制）---------------- */
+body {
+  position: relative;
+  background-image: var(--bg-image);
+  background-color: var(--color-bg-top);            /* 无背景图时的兜底色 */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* 页面主体内容需在光影层之上 */
+.topbar, .nav-drawer, .drawer-overlay, .form-container, #chat-container, #input-bar,
+.toast {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------- 自定义滚动条（由主题变量控制）---------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-from) var(--scrollbar-track-bg);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-bg);
+  border-radius: var(--radius-pill);
+}
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--scrollbar-thumb-from), var(--scrollbar-thumb-to));
+  border-radius: var(--radius-pill);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--scrollbar-thumb-hover-from), var(--scrollbar-thumb-hover-to));
+}
+
+/* ---------------- 通用荧光 hover（按钮类元素复用）---------------- */
+.btn-primary:hover,
+#input-bar button:hover:not(:disabled),
+#send-btn:hover:not(:disabled) {
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.btn-secondary:hover {
+  box-shadow: 0 0 10px rgba(160, 200, 255, 0.18);
+}

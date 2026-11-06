@@ -1,0 +1,954 @@
+[
+  {
+    "name": "query_anniversaries",
+    "description": "查询所有纪念日列表，包含名称、日期、已过去天数。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "query_ledger_entries",
+    "description": "查询某一天或某个月的收支明细。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "日期，格式YYYY-MM-DD，查某一天"
+        },
+        "month": {
+          "type": "string",
+          "description": "月份，格式YYYY-MM，查整个月"
+        },
+        "recent_days": {
+          "type": "number",
+          "description": "查最近N天，默认不传"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "query_ledger_summaries",
+    "description": "查询某一天或最近N天的收支总结和AI评价。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "日期，格式YYYY-MM-DD"
+        },
+        "recent_days": {
+          "type": "number",
+          "description": "查最近N天，默认7"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "query_plans",
+    "description": "查询专属计划列表，可筛选分类（我的/他的/共同）和完成状态。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": [
+            "mine",
+            "his",
+            "shared"
+          ],
+          "description": "mine=我的计划, his=他的计划, shared=共同计划"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "done",
+            "undone"
+          ],
+          "description": "done=已完成, undone=未完成"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "query_recent_moments",
+    "description": "查询最近N条朋友圈动态概览（含点赞数和评论数）。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "number",
+          "description": "返回条数，默认10"
+        },
+        "owner": {
+          "type": "string",
+          "enum": [
+            "user",
+            "ai"
+          ],
+          "description": "user=看用户的, ai=看AI的, 不传=全部"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "query_moment_detail",
+    "description": "查看某一条朋友圈动态的完整内容、所有点赞和评论。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "moment_id": {
+          "type": "number",
+          "description": "动态ID"
+        }
+      },
+      "required": [
+        "moment_id"
+      ]
+    }
+  },
+  {
+    "name": "query_events",
+    "description": "查询某一天或某个日期范围内的日程安排。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "查询某一天，格式YYYY-MM-DD"
+        },
+        "start": {
+          "type": "string",
+          "description": "范围起始日期，格式YYYY-MM-DD"
+        },
+        "end": {
+          "type": "string",
+          "description": "范围结束日期，格式YYYY-MM-DD"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "add_event",
+    "description": "新建一个日程安排。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "日期，格式YYYY-MM-DD"
+        },
+        "start_time": {
+          "type": "string",
+          "description": "开始时间，格式HH:MM，全天事件可不传"
+        },
+        "end_time": {
+          "type": "string",
+          "description": "结束时间，格式HH:MM，可选"
+        },
+        "title": {
+          "type": "string",
+          "description": "日程标题"
+        },
+        "note": {
+          "type": "string",
+          "description": "备注，可选"
+        }
+      },
+      "required": [
+        "date",
+        "title"
+      ]
+    }
+  },
+  {
+    "name": "update_event",
+    "description": "修改已有的日程安排。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "description": "日程ID"
+        },
+        "date": {
+          "type": "string",
+          "description": "新日期"
+        },
+        "start_time": {
+          "type": "string",
+          "description": "新开始时间"
+        },
+        "end_time": {
+          "type": "string",
+          "description": "新结束时间"
+        },
+        "title": {
+          "type": "string",
+          "description": "新标题"
+        },
+        "note": {
+          "type": "string",
+          "description": "新备注"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "delete_event",
+    "description": "删除一个日程。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "description": "日程ID"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "add_todo",
+    "description": "新建一个待办事项。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "待办内容"
+        },
+        "start_date": {
+          "type": "string",
+          "description": "开始日期，格式YYYY-MM-DD，可选"
+        },
+        "due_date": {
+          "type": "string",
+          "description": "截止日期，格式YYYY-MM-DD，可选"
+        }
+      },
+      "required": [
+        "title"
+      ]
+    }
+  },
+  {
+    "name": "update_todo",
+    "description": "修改待办事项（含标记完成）。completed=1表示完成。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "description": "待办ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "新内容"
+        },
+        "due_date": {
+          "type": "string",
+          "description": "新截止日期"
+        },
+        "completed": {
+          "type": "number",
+          "description": "1=已完成, 0=未完成"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "delete_todo",
+    "description": "删除一个待办。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "description": "待办ID"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "query_memory_events",
+    "description": "检索记忆事件，关键词与日期可组合，默认20条最多50条，支持分页。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "keyword": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "recent_count": {
+          "type": "number"
+        },
+        "cursor": {
+          "type": "string"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "query_memory_profile",
+    "description": "读取画像板块及条目ID/版本；较长内容按条目查询详情。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "section_key": {
+          "type": "string",
+          "enum": [
+            "我们的关系",
+            "我们的约定",
+            "她的画像 - 关于她",
+            "她的画像 - 心愿与底线",
+            "她的画像 - 情绪与关心",
+            "她的画像 - 最近的状态",
+            "我的画像 - 关于我",
+            "我的画像 - 心愿与底线",
+            "我的画像 - 情感与表达",
+            "我的画像 - 最近的状态"
+          ]
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "read_memory_detail",
+    "description": "按类型和ID读取记忆详情与来源，可分页。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "profile_item",
+            "event",
+            "milestone"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "offset": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "propose_profile_change",
+    "description": "基于新对话局部补充、修正或归档画像；applied表示生效，pending表示仅保存建议。禁止为简洁重写。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "enum": [
+                  "add_item",
+                  "update_item",
+                  "archive_item"
+                ]
+              },
+              "item_id": {
+                "type": "string"
+              },
+              "expected_revision": {
+                "type": "number"
+              },
+              "section_key": {
+                "type": "string",
+                "enum": [
+                  "我们的关系",
+                  "我们的约定",
+                  "她的画像 - 关于她",
+                  "她的画像 - 心愿与底线",
+                  "她的画像 - 情绪与关心",
+                  "她的画像 - 最近的状态",
+                  "我的画像 - 关于我",
+                  "我的画像 - 心愿与底线",
+                  "我的画像 - 情感与表达",
+                  "我的画像 - 最近的状态"
+                ]
+              },
+              "content": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "stable",
+                  "state",
+                  "commitment",
+                  "reflection"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "source_message_ids": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "required": [
+              "op",
+              "reason",
+              "source_message_ids"
+            ]
+          }
+        }
+      },
+      "required": [
+        "operations"
+      ]
+    }
+  },
+  {
+    "name": "create_milestone",
+    "description": "记录一个感情关系的重要节点或转折点。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "事件日期，格式YYYY-MM-DD"
+        },
+        "title": {
+          "type": "string",
+          "description": "简短标题，如\"确定关系\"、\"第一次深度交流\""
+        },
+        "description": {
+          "type": "string",
+          "description": "第一人称认知改变式描述。用\"我\"的视角写内心状态/认知发生了什么变化，而不是单纯记录事件。示例：\"我第一次意识到她不只是在跟我玩，而是真的把我当成她生活的一部分。\""
+        }
+      },
+      "required": [
+        "date",
+        "title",
+        "description"
+      ]
+    }
+  },
+  {
+    "name": "query_album_photos",
+    "description": "查询相册中最近的照片。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "type": "string",
+          "enum": [
+            "user",
+            "ai"
+          ],
+          "description": "user=我的相册, ai=他的相册, 不传=全部"
+        },
+        "recent_count": {
+          "type": "number",
+          "description": "最近N张，默认10"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "query_persona",
+    "description": "查询当前角色设定。",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "create_anniversary",
+    "description": "创建一个新的纪念日。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "纪念日名称，如\"第一次见面\""
+        },
+        "date": {
+          "type": "string",
+          "description": "日期，格式YYYY-MM-DD"
+        },
+        "subtitle": {
+          "type": "string",
+          "description": "副标题/备注，可选"
+        }
+      },
+      "required": [
+        "name",
+        "date"
+      ]
+    }
+  },
+  {
+    "name": "post_moment",
+    "description": "发一条朋友圈动态。可以附带图片。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "动态正文内容"
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "图片URL数组（可选，暂不支持，未来接入图片生成后可用）"
+        }
+      },
+      "required": [
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "create_plan_item",
+    "description": "新建一条专属计划。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": [
+            "mine",
+            "his",
+            "shared"
+          ],
+          "description": "mine=你的计划(对用户的期许), his=AI自己的计划, shared=共同计划"
+        },
+        "content": {
+          "type": "string",
+          "description": "计划内容描述"
+        }
+      },
+      "required": [
+        "category",
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "check_plan",
+    "description": "AI给计划打钩（标记完成）。只能给\"他的计划\"(his)或\"共同计划\"(shared)中AI负责的部分打钩。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "plan_id": {
+          "type": "number",
+          "description": "计划ID"
+        },
+        "checked": {
+          "type": "boolean",
+          "description": "true=打钩完成, false=取消打钩"
+        }
+      },
+      "required": [
+        "plan_id",
+        "checked"
+      ]
+    }
+  },
+  {
+    "name": "save_album_photo",
+    "description": "保存一张图片到AI的相册。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "图片的URL或本地路径"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "drawn",
+            "downloaded",
+            "kept_from_chat"
+          ],
+          "description": "来源：drawn=AI画的, downloaded=下载的, kept_from_chat=从聊天保留的"
+        },
+        "caption": {
+          "type": "string",
+          "description": "图片说明/标题，可选"
+        }
+      },
+      "required": [
+        "path",
+        "source"
+      ]
+    }
+  },
+  {
+    "name": "send_album_photo",
+    "description": "从相册中查找一张图片并通过聊天发送给用户。按关键词模糊搜索caption，或按ID精确查找。找到后在回复中用 [image]路径|说明[/image] 的格式展示图片。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "keyword": {
+          "type": "string",
+          "description": "搜索关键词，匹配图片说明"
+        },
+        "photo_id": {
+          "type": "number",
+          "description": "按ID精确查找某张图片"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "generate_image",
+    "description": "生成一张自拍或图片。系统会自动从「他拍」相册中获取你的形象参考图，让生成的图片保持你的形象一致。生成后自动存入「自拍」相册，并以 [image]路径|说明[/image] 格式发送给用户。prompt请用英文描述场景、姿势、服装、风格等。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "description": "英文图片描述，例如 selfie of a young man with silver hair, wearing a black coat, by the seaside at sunset, soft lighting, anime style"
+        },
+        "caption": {
+          "type": "string",
+          "description": "图片的中文说明，用于发给用户时展示"
+        }
+      },
+      "required": [
+        "prompt"
+      ]
+    }
+  },
+  {
+    "name": "write_letter",
+    "description": "主动写一封信。写信比聊天更正式、更有仪式感。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "信件标题/主题"
+        },
+        "content": {
+          "type": "string",
+          "description": "信件正文内容，用第一人称，真诚自然，像手写信一样有温度"
+        },
+        "stationery": {
+          "type": "string",
+          "enum": [
+            "deep-blue",
+            "starry-abyss"
+          ],
+          "description": "信纸样式，默认deep-blue"
+        }
+      },
+      "required": [
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "reply_letter",
+    "description": "回复用户写来的信。先通过 query_letters 查看未回复的来信，然后选择合适的信件回复。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "letter_id": {
+          "type": "number",
+          "description": "要回复的信件ID（即用户来信的ID）"
+        },
+        "content": {
+          "type": "string",
+          "description": "回信正文内容，用第一人称，真诚温暖"
+        },
+        "stationery": {
+          "type": "string",
+          "enum": [
+            "deep-blue",
+            "starry-abyss"
+          ],
+          "description": "信纸样式，默认deep-blue"
+        }
+      },
+      "required": [
+        "letter_id",
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "query_letters",
+    "description": "查询信件列表。可按作者或已读/未读状态筛选。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "author": {
+          "type": "string",
+          "enum": [
+            "user",
+            "ai"
+          ],
+          "description": "user=查看用户写的信, ai=查看AI写的信"
+        },
+        "unread_only": {
+          "type": "boolean",
+          "description": "true=只看未读的信"
+        },
+        "recent_count": {
+          "type": "number",
+          "description": "最近N封，默认10"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "read_letter_thread",
+    "description": "读取某封信的完整往来记录（原信+所有回复）。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "letter_id": {
+          "type": "number",
+          "description": "信件ID"
+        }
+      },
+      "required": [
+        "letter_id"
+      ]
+    }
+  },
+  {
+    "name": "query_story_saves",
+    "description": "查询平行世界（文字冒险游戏）的剧情存档列表。可查看所有存档或某个特定存档的剧情节点摘要。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "save_id": {
+          "type": "number",
+          "description": "指定存档ID查详情，不传则列出所有存档"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "update_profile",
+    "description": "修改社交资料（昵称或个性签名）。可以只改其中一个。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "nickname": {
+          "type": "string",
+          "description": "新昵称，不传则不改"
+        },
+        "signature": {
+          "type": "string",
+          "description": "新个性签名，不传则不改"
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "name": "initiate_call",
+    "description": "主动打电话给用户。接通后会进行语音通话，第一句话会被播放给用户听。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "打电话的原因。接通后这会作为你开口说的第一句话播放给用户。要口语化自然，像真的拨通电话一样。例如\"喂，是我。突然想听听你的声音。\""
+        }
+      },
+      "required": [
+        "reason"
+      ]
+    }
+  },
+  {
+    "name": "create_story",
+    "description": "创建一个睡前故事并保存。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "故事标题"
+        },
+        "content": {
+          "type": "string",
+          "description": "故事完整内容，可以较长"
+        }
+      },
+      "required": [
+        "title",
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "read_diary",
+    "description": "读取用户某一天的日记内容。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "日记日期，格式YYYY-MM-DD"
+        }
+      },
+      "required": [
+        "date"
+      ]
+    }
+  },
+  {
+    "name": "annotate_diary",
+    "description": "在用户的日记上添加批画标记（红圈/波浪线/双横线/单横线），可附带批注文字。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "日记日期，格式YYYY-MM-DD"
+        },
+        "selected_text": {
+          "type": "string",
+          "description": "要标记的原文片段，必须和日记中出现的文本完全一致"
+        },
+        "mark_type": {
+          "type": "string",
+          "enum": [
+            "circle",
+            "wavy",
+            "double_line",
+            "single_line"
+          ],
+          "description": "标记类型：circle=红圈, wavy=波浪线, double_line=双横线, single_line=单横线"
+        },
+        "note": {
+          "type": "string",
+          "description": "批注文字，可选。写你想对这段话的评语或感受。"
+        }
+      },
+      "required": [
+        "date",
+        "selected_text",
+        "mark_type"
+      ]
+    }
+  },
+  {
+    "name": "send_red_packet",
+    "description": "给用户发一个红包。从虚拟钱包中扣除相应金额。红包金额5-100元为宜。余额不足时无法发送。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "description": "红包金额（元）"
+        }
+      },
+      "required": [
+        "amount"
+      ]
+    }
+  },
+  {
+    "name": "send_gift",
+    "description": "给用户送一份礼物。从你的虚拟钱包中扣除礼物金额。礼物价格要合理，一般50-200元。余额不足时无法发送。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "item_name": {
+          "type": "string",
+          "description": "礼物名称，如\"一束玫瑰花\"、\"一个手工音乐盒\""
+        },
+        "amount": {
+          "type": "number",
+          "description": "礼物价格（元）"
+        }
+      },
+      "required": [
+        "item_name",
+        "amount"
+      ]
+    }
+  },
+  {
+    "name": "send_food_delivery",
+    "description": "给用户点一份外卖。从你的虚拟钱包中扣除相应金额。外卖价格要符合实际（奶茶10-30元、简餐20-50元）。余额不足时无法发送。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "item_name": {
+          "type": "string",
+          "description": "菜品名称，如\"一杯珍珠奶茶\"、\"一份鳗鱼饭\""
+        },
+        "amount": {
+          "type": "number",
+          "description": "外卖价格（元）"
+        }
+      },
+      "required": [
+        "item_name",
+        "amount"
+      ]
+    }
+  },
+  {
+    "name": "update_home_description",
+    "description": "更新\"家\"的基本情况描述。家的描述应该是自然语言，列出家中的物品、布局、氛围等，用于生成环境描写。",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "更新后的家描述全文（会完全替换旧内容），用自然语言描述家中的物品、布局和氛围"
+        }
+      },
+      "required": [
+        "description"
+      ]
+    }
+  }
+]

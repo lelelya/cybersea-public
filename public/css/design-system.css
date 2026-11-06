@@ -1,0 +1,241 @@
+/* Shared visual language. Loaded after page styles; colors follow the active theme. */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --type-caption: 12px;
+  --type-body: 14px;
+  --type-label: 15px;
+  --type-section: 18px;
+  --type-title: 28px;
+  --page-width: 800px;
+  --page-gutter: 24px;
+  --control-height: 44px;
+  --motion-fast: 160ms;
+  --surface-panel: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  --surface-input: color-mix(in srgb, var(--color-bg-alt) 94%, transparent);
+  --surface-hover: color-mix(in srgb, var(--color-primary) 7%, var(--color-surface));
+  --focus-ring: 0 0 0 3px var(--color-primary-soft);
+}
+html { color-scheme: dark; }
+body { -webkit-font-smoothing: antialiased; }
+button, input, textarea, select { font-family: inherit; }
+button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+:where(button, a, input, textarea, select):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+/* Navigation is the stable frame across every scene. */
+.topbar, .with-bottom-tabs > .topbar {
+  min-height: 60px;
+  padding-left: var(--page-gutter);
+  padding-right: var(--page-gutter);
+  background: var(--color-surface-translucent-strong);
+  border-bottom-color: var(--color-border);
+}
+.topbar .title { font-size: 16px; font-weight: 600; letter-spacing: 0.5px; }
+.bottom-tabs { padding-top: 8px; gap: 4px; background: var(--color-surface-translucent-strong); }
+.bottom-tab {
+  min-height: 54px;
+  font-size: var(--type-caption);
+  border-radius: var(--radius-md);
+  transition: background-color var(--motion-fast), color var(--motion-fast);
+}
+.bottom-tab.active { background: var(--color-primary-soft); box-shadow: inset 0 1px 0 var(--color-border); }
+.nav-back, .topbar .menu-btn { min-width: var(--control-height); min-height: var(--control-height); }
+
+/* Equal side columns keep the title at the screen center, even with unequal actions. */
+.topbar.app-header, .with-bottom-tabs > .topbar.app-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, min(44vw, calc(100% - 184px), 360px)) minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  height: calc(60px + env(safe-area-inset-top, 0px));
+  min-height: calc(60px + env(safe-area-inset-top, 0px));
+  flex-shrink: 0;
+  padding: env(safe-area-inset-top, 0px) 16px 0;
+  position: relative;
+  z-index: 20;
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+}
+.app-header-left, .app-header-right { display: flex; align-items: center; min-width: 0; gap: 4px; }
+.app-header-left { justify-content: flex-start; }
+.app-header-right { justify-content: flex-end; }
+.app-header > .title {
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app-header #chat-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.app-header #chat-remark-input { min-width: 0; width: 100%; }
+.app-header-right .home-mode-btn, .app-header-right .chat-menu-btn,
+.app-header-left .sh-back-btn, .app-header-left .ir-back-btn {
+  width: 44px; height: 44px; padding: 10px; margin: 0; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.app-header-right .btn-ghost-sm { margin-right: 0 !important; white-space: nowrap; }
+.app-header-left .reader-back-btn { min-width: 44px; min-height: 44px; }
+#reader-view { z-index: 30; }
+.page-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px var(--page-gutter);
+  background: var(--color-surface-translucent);
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+  z-index: 1;
+}
+.story-toolbar { justify-content: flex-end; }
+.story-toolbar > div { flex-wrap: wrap; justify-content: flex-end; }
+.search-toolbar .sh-search-input { width: 100%; max-width: 752px; min-height: 44px; font-size: 16px; }
+.diary-toolbar .diary-date-btn { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+.life-heading { align-items: center; margin-bottom: 24px; }
+.life-eyebrow { margin: 0; }
+.with-bottom-tabs .life-heading { flex-direction: row; }
+@media (max-width: 640px) {
+  .topbar.app-header, .with-bottom-tabs > .topbar.app-header { padding-left: 12px; padding-right: 12px; }
+}
+
+/* Common page rhythm; illustrated scenes keep their own composition. */
+.hub-page, .hub-page.life-page, .hub-page.companion-room {
+  max-width: var(--page-width);
+  padding-left: var(--page-gutter);
+  padding-right: var(--page-gutter);
+}
+.form-container { max-width: var(--page-width); padding: var(--space-8) var(--page-gutter); }
+.with-bottom-tabs .form-container { padding-left: var(--page-gutter); padding-right: var(--page-gutter); }
+.hub-heading { margin-bottom: var(--space-8); }
+.hub-heading h1 { font-size: var(--type-title); font-weight: 600; line-height: 1.4; letter-spacing: 0.5px; }
+.hub-section { margin-top: var(--space-8); }
+.hub-section h2 { font-size: var(--type-label); font-weight: 600; margin-bottom: var(--space-4); }
+.hub-card h2 { font-size: var(--type-section); font-weight: 600; }
+.settings-card-title, .form-card > h2, .album-section-title {
+  font-size: var(--type-section); font-weight: 600; line-height: 1.5;
+}
+.life-group h2, .companion-group h2 { font-size: var(--type-caption); line-height: 1.6; }
+.life-entry, .companion-entry { gap: var(--space-4); }
+.life-entry small, .companion-entry small, .hub-row small { line-height: 1.7; }
+.life-entry-icon, .companion-entry-icon { stroke-width: 1.6; }
+.life-entry-arrow, .companion-entry-arrow { font-size: 18px; }
+
+/* Content surfaces are readable; glass remains in navigation and overlays. */
+.form-card, .settings-card, .hub-card, .hub-list {
+  background: var(--surface-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-softer);
+}
+.form-card, .settings-card, .hub-card { padding: var(--space-6); }
+.form-card { margin-bottom: var(--space-6); }
+.settings-card:hover { border-color: var(--color-border); }
+.hub-tools { gap: var(--space-3); }
+.hub-tool {
+  background: var(--surface-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6) var(--space-2);
+}
+.hub-icon { border-radius: var(--radius-sm); }
+.hub-row { min-height: 72px; padding: var(--space-4) var(--space-6); }
+.hub-tool, .hub-row, .life-entry, .companion-entry {
+  transition: background-color var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast);
+}
+@media (hover: hover) {
+  .hub-tool:hover, .hub-row:hover { background: var(--surface-hover); }
+  .hub-tool:hover { border-color: var(--color-border-strong); }
+  .life-entry:hover, .companion-entry:hover { background: var(--color-primary-soft); color: var(--color-primary); }
+}
+
+/* One family of controls with explicit compact variants. */
+.btn-primary, .btn-secondary, .btn-ghost {
+  min-height: var(--control-height);
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: var(--type-body);
+  font-weight: 600;
+  line-height: 1.5;
+  transition: background-color var(--motion-fast), border-color var(--motion-fast), transform var(--motion-fast);
+}
+.btn-primary { box-shadow: none; }
+.btn-secondary { color: var(--color-text); background: var(--surface-panel); }
+.btn-ghost { box-shadow: none; }
+.btn-ghost-sm { min-height: 32px; padding: 5px 12px; font-size: var(--type-caption); }
+.btn-primary:hover, .btn-secondary:hover, .btn-ghost:hover { box-shadow: none; }
+.btn-secondary:hover, .btn-ghost:hover { border-color: var(--color-primary); }
+.btn-primary:disabled, .btn-secondary:disabled, .btn-ghost:disabled {
+  opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none;
+}
+.form-field { margin-bottom: var(--space-6); }
+.form-field label { font-size: var(--type-body); line-height: 1.6; margin-bottom: var(--space-2); }
+.form-field input:is([type="text"], [type="number"], [type="url"], [type="password"]),
+.form-field textarea, .settings-input, .modal-input {
+  min-height: var(--control-height);
+  padding: 11px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-input);
+  color: var(--color-text);
+  font-size: var(--type-body);
+  line-height: 1.6;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+.form-field textarea { min-height: 104px; }
+.form-field input::placeholder, .form-field textarea::placeholder,
+.settings-input::placeholder, .modal-input::placeholder { color: var(--color-text-muted); opacity: 0.7; }
+.form-field input:focus, .form-field textarea:focus, .settings-input:focus, .modal-input:focus {
+  outline: none; border-color: var(--color-primary); background: var(--surface-input); box-shadow: var(--focus-ring);
+}
+input[type="time"].settings-input { color-scheme: inherit; border-color: var(--color-border); }
+.settings-tab { min-height: var(--control-height); font-size: var(--type-body); }
+#tab-model.active { display: grid; gap: var(--space-6); }
+#tab-model .settings-card { margin: 0; }
+#tab-model .settings-card-title { margin: 0 0 var(--space-2); }
+#tab-model .settings-card-description, #tab-model .settings-hint {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--type-caption);
+  line-height: 1.7;
+}
+#tab-model .form-field { margin-bottom: var(--space-4); }
+.modal-card {
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+}
+.modal-title { font-size: var(--type-section); font-weight: 600; line-height: 1.5; color: var(--color-text); margin-bottom: var(--space-4); }
+@media (max-width: 640px) {
+  :root { --page-gutter: 20px; }
+  .topbar, .with-bottom-tabs > .topbar { padding-left: 12px; padding-right: 12px; }
+  .form-container { padding-top: var(--space-6); padding-bottom: var(--space-6); }
+  .form-card, .settings-card, .hub-card { padding: var(--space-4); }
+  .hub-row { padding: var(--space-4); }
+  /* Prevent mobile browsers zooming the page on text entry. */
+  .form-field input:is([type="text"], [type="number"], [type="url"], [type="password"]),
+  .form-field textarea, .settings-input, .modal-input { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bottom-tab, .hub-tool, .hub-row, .life-entry, .companion-entry,
+  .btn-primary, .btn-secondary, .btn-ghost, .form-field input,
+  .form-field textarea, .settings-input, .modal-input { transition: none; }
+}

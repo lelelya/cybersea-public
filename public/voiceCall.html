@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('cybersea_theme')||'deep-sea')</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>通话记录</title>
+  <script src="js/shared.js"></script>
+<script src="js/bgm-player.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/effects.css" />
+<style>
+  /* ========== 语音通话专属样式 ========== */
+
+  .vc-page {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---- 拨号按钮 ---- */
+  .vc-dial-btn {
+    background: none;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-text);
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-family: var(--font-family);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .vc-dial-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    box-shadow: var(--shadow-glow-primary);
+  }
+  .vc-dial-btn svg { width: 18px; height: 18px; }
+
+  /* ---- 通话历史时间轴 ---- */
+  .vc-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px 20px 36px;
+  }
+  .vc-timeline {
+    position: relative;
+    padding-left: 24px;
+  }
+  .vc-timeline::before {
+    content: "";
+    position: absolute;
+    left: 7px; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent 0%, var(--color-border-strong) 5%, var(--color-border-strong) 95%, transparent 100%);
+  }
+  .vc-record {
+    position: relative;
+    margin-bottom: 24px;
+    padding: 16px 18px;
+    background: var(--color-surface-translucent);
+    backdrop-filter: blur(var(--blur-glass));
+    -webkit-backdrop-filter: blur(var(--blur-glass));
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: all 0.25s;
+  }
+  .vc-record::before {
+    content: "";
+    position: absolute;
+    left: -28px; top: 20px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    box-shadow: 0 0 8px rgba(79, 217, 200, 0.5);
+    border: 2px solid var(--color-bg-top);
+  }
+  .vc-record:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-softer);
+  }
+  .vc-record-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .vc-record-info { display: flex; flex-direction: column; gap: 4px; justify-content: flex-end; }
+  .vc-record-time { font-size: 15px; color: var(--color-text-muted); }
+  .vc-record-duration { font-size: 14px; font-weight: 600; color: var(--color-primary); }
+  .vc-record-actions { display: flex; gap: 8px; align-items: center; }
+  .vc-record-right { display: flex; align-items: center; gap: 10px; }
+  .vc-play-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-primary);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .vc-play-btn:hover {
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
+    box-shadow: var(--shadow-glow-primary);
+  }
+  .vc-play-btn svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
+  .vc-delete-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 3px 0;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-family: var(--font-family);
+    transition: all 0.2s;
+    text-align: left;
+    align-self: flex-start;
+    opacity: 0.5;
+  }
+  .vc-delete-btn:hover {
+    color: var(--color-danger);
+    border-color: var(--color-danger-soft);
+    opacity: 1;
+  }
+  .vc-audio-player { margin-top: 10px; display: none; }
+  .vc-audio-player.show { display: block; }
+  .vc-audio-player audio {
+    width: 100%;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    outline: none;
+    background: transparent;
+    filter: invert(0.9) hue-rotate(180deg) saturate(0.4);
+  }
+  .vc-audio-player audio::-webkit-media-controls-enclosure {
+    background: transparent;
+  }
+  .vc-audio-player audio::-webkit-media-controls-panel {
+    background: transparent;
+  }
+
+  /* ---- 空状态 ---- */
+  .vc-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    gap: 12px;
+    padding: 40px;
+    text-align: center;
+  }
+  .vc-empty-icon { width: 64px; height: 64px; opacity: 0.3; stroke: var(--color-text-muted); }
+  .vc-empty-title { font-size: 16px; font-weight: 600; }
+  .vc-empty-sub { font-size: 13px; opacity: 0.6; }
+
+  /* ---- 拨号/通话界面 ---- */
+  .vc-call-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: linear-gradient(180deg, #020409 0%, #04060c 50%, #050812 100%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+  }
+  .vc-call-screen.active { display: flex; }
+
+  /* 拨号等待 */
+  .vc-dialing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    justify-content: center;
+    flex: 1;
+  }
+  .vc-dialing-label {
+    font-size: 18px;
+    color: var(--color-text-muted);
+    animation: vc-pulse-text 1.5s ease-in-out infinite;
+  }
+  @keyframes vc-pulse-text {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+  .vc-dialing-ring {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 2px solid var(--color-border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: vc-ring-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes vc-ring-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(79, 217, 200, 0.3); border-color: var(--color-border-strong); }
+    50% { box-shadow: 0 0 0 24px rgba(79, 217, 200, 0); border-color: var(--color-primary); }
+  }
+  .vc-dialing-ring svg { width: 36px; height: 36px; stroke: var(--color-primary); }
+  .vc-cancel-btn {
+    margin-top: 16px;
+    background: none;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 10px 28px;
+    border-radius: var(--radius-pill);
+    font-size: 14px;
+    font-family: var(--font-family);
+    transition: all 0.2s;
+  }
+  .vc-cancel-btn:hover { border-color: var(--color-danger); color: var(--color-danger); }
+
+  /* ---- 来电界面 ---- */
+  .vc-incoming-screen {
+    position: fixed; inset: 0; z-index: 250;
+    background: linear-gradient(180deg, #020409 0%, #04060c 50%, #050812 100%);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 32px;
+  }
+  .vc-incoming-screen.active { display: flex; }
+
+  .vc-incoming-ring {
+    width: 100px; height: 100px; border-radius: 50%;
+    border: 2px solid var(--color-accent);
+    display: flex; align-items: center; justify-content: center;
+    animation: vc-ring-pulse 1.2s ease-in-out infinite;
+  }
+
+  .vc-incoming-label {
+    font-size: 20px; color: var(--color-text);
+    animation: vc-pulse-text 1.5s ease-in-out infinite;
+  }
+
+  .vc-incoming-buttons {
+    display: flex; gap: 48px; margin-top: 16px;
+  }
+
+  .vc-accept-btn {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: none; background: var(--color-success);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(126, 224, 184, 0.3);
+    transition: all 0.2s;
+  }
+  .vc-accept-btn:hover {
+    background: #5cd4a0; box-shadow: 0 0 32px rgba(126, 224, 184, 0.5);
+    transform: scale(1.06);
+  }
+  .vc-accept-btn svg { width: 30px; height: 30px; stroke: white; }
+
+  .vc-reject-btn {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: none; background: var(--color-danger);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(255, 138, 138, 0.3);
+    transition: all 0.2s;
+  }
+  .vc-reject-btn:hover {
+    background: #ff6b6b; box-shadow: 0 0 32px rgba(255, 138, 138, 0.5);
+    transform: scale(1.06);
+  }
+  .vc-reject-btn svg { width: 28px; height: 28px; stroke: white; }
+
+  /* ---- 通话中 ---- */
+  .vc-in-call {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 30px 20px 20px;
+  }
+  .vc-in-call.active { display: flex; }
+
+  /* 计时器 */
+  .vc-call-timer {
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+    padding-top: 10px;
+  }
+
+  /* ---- 中间：头像区域 ---- */
+  .vc-avatar-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 0;
+    flex-shrink: 0;
+    transition: padding 0.25s, gap 0.25s;
+  }
+
+  /* 头像容器：呼吸光效 + 波纹 */
+  .vc-avatar-wrap {
+    position: relative;
+    width: 120px;
+    height: 120px;
+  }
+
+  /* 呼吸光效光圈 */
+  .vc-avatar-glow {
+    position: absolute;
+    inset: -16px;
+    border-radius: 50%;
+    border: 2px solid rgba(79, 217, 200, 0.25);
+    animation: vc-breath 3s ease-in-out infinite;
+  }
+  @keyframes vc-breath {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(79, 217, 200, 0.15), 0 0 40px rgba(79, 217, 200, 0.05);
+      border-color: rgba(79, 217, 200, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 35px rgba(79, 217, 200, 0.35), 0 0 70px rgba(79, 217, 200, 0.12);
+      border-color: rgba(79, 217, 200, 0.5);
+    }
+  }
+
+  /* 波纹扩散层（AI说话时触发） */
+  .vc-avatar-ripple {
+    position: absolute;
+    inset: -24px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 159, 192, 0.4);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .vc-avatar-ripple.active {
+    animation: vc-ripple 1.5s ease-out infinite;
+  }
+  @keyframes vc-ripple {
+    0% {
+      transform: scale(0.85);
+      opacity: 0.8;
+      border-color: rgba(255, 159, 192, 0.6);
+    }
+    100% {
+      transform: scale(1.5);
+      opacity: 0;
+      border-color: rgba(255, 159, 192, 0);
+    }
+  }
+
+  /* 头像图片 */
+  .vc-avatar-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--color-border-strong);
+    background: var(--color-surface);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* 头像占位 SVG */
+  .vc-avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--color-surface-translucent-strong);
+    border: 2px solid var(--color-border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+  .vc-avatar-placeholder svg {
+    width: 56px;
+    height: 56px;
+    stroke: var(--color-text-muted);
+    opacity: 0.5;
+  }
+
+  /* 名字 */
+  .vc-avatar-name {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--color-text);
+    letter-spacing: 1px;
+  }
+
+  /* ---- 白噪音图标按钮（右上角） ---- */
+  .vc-noise-icon-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-translucent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 210;
+  }
+  .vc-noise-icon-btn:hover,
+  .vc-noise-icon-btn.open {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    box-shadow: var(--shadow-glow-primary);
+  }
+  .vc-noise-icon-btn svg { width: 20px; height: 20px; }
+
+  /* 白噪音浮层面板 */
+  .vc-noise-overlay {
+    position: absolute;
+    top: 68px;
+    right: 16px;
+    width: 260px;
+    background: var(--color-surface-translucent-strong);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 211;
+    box-shadow: var(--shadow-soft);
+  }
+  .vc-noise-overlay.show { display: flex; }
+
+  .vc-noise-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .vc-noise-label {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    width: 28px;
+    flex-shrink: 0;
+  }
+  .vc-noise-toggle {
+    width: 36px; height: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--color-border-strong);
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.25s;
+    flex-shrink: 0;
+  }
+  .vc-noise-toggle::after {
+    content: "";
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--color-text-muted);
+    transition: all 0.25s;
+  }
+  .vc-noise-toggle.on {
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary);
+  }
+  .vc-noise-toggle.on::after { left: 18px; background: var(--color-primary); }
+  .vc-noise-volume {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-border-strong);
+    outline: none;
+    cursor: pointer;
+  }
+  .vc-noise-volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 2px solid var(--color-bg-top);
+    cursor: pointer;
+  }
+
+  /* ---- 中间内容区（头像 + 消息） ---- */
+  .vc-call-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    min-height: 0;
+    width: 100%;
+    transition: justify-content 0.25s;
+  }
+  .vc-call-content.has-messages {
+    justify-content: flex-start;
+  }
+
+  .vc-avatar-area.compact {
+    padding: 6px 0;
+    gap: 8px;
+  }
+  .vc-avatar-area.compact .vc-avatar-wrap {
+    width: 80px;
+    height: 80px;
+  }
+  .vc-avatar-area.compact .vc-avatar-img {
+    width: 80px;
+    height: 80px;
+  }
+  .vc-avatar-area.compact .vc-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+  }
+  .vc-avatar-area.compact .vc-avatar-placeholder svg {
+    width: 36px;
+    height: 36px;
+  }
+  .vc-avatar-area.compact .vc-avatar-glow {
+    inset: -10px;
+  }
+  .vc-avatar-area.compact .vc-avatar-ripple {
+    inset: -16px;
+  }
+  .vc-avatar-area.compact .vc-avatar-name {
+    font-size: 14px;
+  }
+
+  /* ---- 通话文字消息 ---- */
+  .vc-call-messages {
+    flex: 1;
+    width: 100%;
+    max-width: 360px;
+    overflow-y: auto;
+    padding: 0 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    scroll-behavior: smooth;
+  }
+  .vc-call-messages:empty {
+    display: none;
+  }
+
+  .vc-call-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+    animation: vc-bubble-in 0.25s ease-out;
+  }
+  @keyframes vc-bubble-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .vc-call-bubble.user {
+    align-self: flex-end;
+    background: var(--color-primary-soft);
+    border: 1px solid var(--color-primary);
+    color: var(--color-text);
+    border-bottom-right-radius: 4px;
+  }
+  .vc-call-bubble.ai {
+    align-self: flex-start;
+    background: var(--color-surface-translucent-strong);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    border-bottom-left-radius: 4px;
+  }
+
+  /* ---- 文字输入行 ---- */
+  .vc-text-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease, opacity 0.2s ease, padding 0.2s ease, margin 0.2s ease;
+    margin-bottom: 0;
+  }
+  .vc-text-input-row.expanded {
+    max-height: 56px;
+    opacity: 1;
+    padding: 8px 16px;
+    margin-bottom: 4px;
+  }
+
+  .vc-text-input {
+    flex: 1;
+    background: var(--color-surface-translucent);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    color: var(--color-text);
+    font-size: 14px;
+    font-family: var(--font-family);
+    padding: 10px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .vc-text-input::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.5;
+  }
+  .vc-text-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 8px rgba(79, 217, 200, 0.15);
+  }
+
+  .vc-collapse-input-btn,
+  .vc-send-text-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface-translucent);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .vc-collapse-input-btn:hover,
+  .vc-send-text-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+  .vc-send-text-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .vc-send-text-btn:disabled:hover {
+    border-color: var(--color-border-strong);
+    color: var(--color-text-muted);
+  }
+  .vc-collapse-input-btn svg,
+  .vc-send-text-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* 键盘按钮（展开文字输入入口） */
+  .vc-keyboard-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border-strong);
+    background: var(--color-surface-translucent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--color-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .vc-keyboard-btn:hover {
+    border-color: var(--color-text-muted);
+  }
+  .vc-keyboard-btn.active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    box-shadow: var(--shadow-glow-primary);
+  }
+  .vc-keyboard-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* ---- 底部操作区 ---- */
+  .vc-bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 20px 0 30px;
+    position: relative;
+  }
+
+  /* 挂断按钮 */
+  .vc-hangup-btn {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-danger);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 0 20px rgba(255, 138, 138, 0.3);
+  }
+  .vc-hangup-btn:hover {
+    background: #ff6b6b;
+    box-shadow: 0 0 32px rgba(255, 138, 138, 0.5);
+    transform: scale(1.06);
+  }
+  .vc-hangup-btn svg {
+    width: 28px; height: 28px;
+    stroke: white;
+  }
+
+  /* 麦克风开关 */
+  .vc-mic-btn {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border-strong);
+    background: var(--color-surface-translucent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--color-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .vc-mic-btn:hover {
+    border-color: var(--color-text-muted);
+  }
+  .vc-mic-btn.muted {
+    border-color: var(--color-danger);
+    background: var(--color-danger-soft);
+  }
+  .vc-mic-btn.muted svg { stroke: var(--color-danger); }
+  .vc-mic-btn svg { width: 22px; height: 22px; }
+
+</style>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#050a14" />
+  <link rel="stylesheet" href="css/design-system.css?v=2">
+</head>
+<body>
+  <div class="topbar">
+    <button id="menu-btn" class="menu-btn">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <div class="title">通话记录</div>
+    <div style="width:24px;"></div>
+  </div>
+
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <div id="nav-drawer" class="nav-drawer">
+    <div class="drawer-header">
+      <div class="drawer-user-info">
+        <div class="drawer-logo">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+        </svg>
+      </div>
+        <div class="drawer-title">CyberSea</div>
+      </div>
+    </div>
+    <nav class="drawer-nav">
+      <a href="index.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></i><span>聊天</span></a>
+      <a href="persona.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></i><span>角色设定</span></a>
+      <a href="anniversary.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></i><span>纪念日</span></a>
+      <a href="calendar.html" class="nav-item"><i><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></i><span>日历</span></a>
+      <a href="ledger.html" class="nav-item"><i><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></i><span>记账本</span></a>
+      <a href="album.html" class="nav-item"><i><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></i><span>相册</span></a>
+      <a href="plan.html" class="nav-item"><i><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></i><span>专属计划</span></a>
+      <a href="moments.html" class="nav-item"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg></i><span>朋友圈</span></a>
+      <a href="bookshelf.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><path d="M10 9h4"></path><path d="M10 13h2"></path></svg></i><span>书架</span></a>
+      <a href="memoryBank.html" class="nav-item"><i><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg></i><span>记忆库</span></a>
+      <a href="letters.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><polyline points="2 4 12 13 22 4"></polyline></svg></i><span>信箱</span></a>
+      <a href="parallelWorld.html" class="nav-item"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20"></path><path d="M2 12h20"></path></svg></i><span>平行世界</span></a>
+      <a href="settings.html" class="nav-item"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></i><span>设置</span></a>
+    </nav>
+  </div>
+
+  <!-- 历史列表视图 -->
+  <div id="vc-history-view" class="vc-page">
+    <div id="vc-history-container" class="vc-history">
+      <div class="vc-empty" id="vc-empty">
+        <svg class="vc-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
+        </svg>
+        <div class="vc-empty-title">还没有通话记录</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通话界面 -->
+  <div id="vc-call-screen" class="vc-call-screen">
+    <!-- 拨号等待 -->
+    <div id="vc-dialing-view" class="vc-dialing">
+      <div class="vc-dialing-ring">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
+        </svg>
+      </div>
+      <div class="vc-dialing-label">正在呼叫...</div>
+      <button id="vc-cancel-dial" class="vc-cancel-btn">取消</button>
+    </div>
+
+    <!-- 通话中 -->
+    <div id="vc-in-call-view" class="vc-in-call">
+      <!-- 白噪音图标按钮 -->
+      <button class="vc-noise-icon-btn" id="vc-noise-icon-btn" title="白噪音">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="2 18 6 18 10 22 10 2 6 6 2 6 2 18"></polyline>
+          <path d="M14 8.5a4.5 4.5 0 0 1 0 7"></path>
+          <path d="M17.5 5.5a8.5 8.5 0 0 1 0 13"></path>
+        </svg>
+      </button>
+
+      <!-- 白噪音浮层面板 -->
+      <div class="vc-noise-overlay" id="vc-noise-overlay">
+        <div class="vc-noise-row">
+          <span class="vc-noise-label">雨声</span>
+          <button class="vc-noise-toggle" data-noise="rain"></button>
+          <input type="range" class="vc-noise-volume" data-noise="rain" min="0" max="100" value="50" />
+        </div>
+        <div class="vc-noise-row">
+          <span class="vc-noise-label">海浪</span>
+          <button class="vc-noise-toggle" data-noise="ocean"></button>
+          <input type="range" class="vc-noise-volume" data-noise="ocean" min="0" max="100" value="50" />
+        </div>
+        <div class="vc-noise-row">
+          <span class="vc-noise-label">风声</span>
+          <button class="vc-noise-toggle" data-noise="wind"></button>
+          <input type="range" class="vc-noise-volume" data-noise="wind" min="0" max="100" value="50" />
+        </div>
+      </div>
+
+      <!-- 计时器 -->
+      <div class="vc-call-timer" id="vc-timer">00:00</div>
+
+      <!-- 中间：内容区（头像 + 文字消息） -->
+      <div class="vc-call-content" id="vc-call-content">
+        <div class="vc-avatar-area" id="vc-avatar-area">
+          <div class="vc-avatar-wrap" id="vc-avatar-wrap">
+            <div class="vc-avatar-glow"></div>
+            <div class="vc-avatar-ripple" id="vc-avatar-ripple"></div>
+            <div class="vc-avatar-placeholder" id="vc-avatar-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <img class="vc-avatar-img" id="vc-avatar-img" src="" alt="" style="display:none" />
+          </div>
+          <div class="vc-avatar-name" id="vc-avatar-name">他</div>
+        </div>
+
+        <!-- 通话文字消息气泡 -->
+        <div class="vc-call-messages" id="vc-call-messages"></div>
+      </div>
+
+      <!-- 文字输入行 -->
+      <div class="vc-text-input-row" id="vc-text-input-row">
+        <button class="vc-collapse-input-btn" id="vc-collapse-input-btn" title="收起键盘">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <input type="text" class="vc-text-input" id="vc-text-input" placeholder="想对他说的话..." autocomplete="off" />
+        <button class="vc-send-text-btn" id="vc-send-text-btn" title="发送">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5"></line>
+            <polyline points="5 12 12 5 19 12"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 底部操作区 -->
+      <div class="vc-bottom-bar">
+        <button class="vc-mic-btn" id="vc-mic-btn" title="麦克风">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+
+        <button class="vc-hangup-btn" id="vc-hangup" title="挂断">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+        </button>
+
+        <button class="vc-keyboard-btn" id="vc-keyboard-btn" title="打字">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+            <line x1="6" y1="8" x2="6" y2="8"></line>
+            <line x1="10" y1="8" x2="10" y2="8"></line>
+            <line x1="14" y1="8" x2="14" y2="8"></line>
+            <line x1="18" y1="8" x2="18" y2="8"></line>
+            <line x1="6" y1="12" x2="6" y2="12"></line>
+            <line x1="10" y1="12" x2="10" y2="12"></line>
+            <line x1="14" y1="12" x2="14" y2="12"></line>
+            <line x1="18" y1="12" x2="18" y2="12"></line>
+            <line x1="6" y1="16" x2="14" y2="16"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 来电界面 -->
+  <div class="vc-incoming-screen" id="vc-incoming-screen">
+    <div class="vc-avatar-wrap">
+      <div class="vc-avatar-glow"></div>
+      <div class="vc-avatar-ripple active"></div>
+      <div class="vc-avatar-placeholder" id="vc-incoming-avatar-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+      <img class="vc-avatar-img" id="vc-incoming-avatar-img" src="" alt="" style="display:none" />
+    </div>
+    <div class="vc-avatar-name" id="vc-incoming-name">他</div>
+    <div class="vc-incoming-ring">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+      </svg>
+    </div>
+    <div class="vc-incoming-label">来电中...</div>
+    <div class="vc-incoming-buttons">
+      <button class="vc-reject-btn" id="vc-reject-btn" title="挂断">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/>
+        </svg>
+      </button>
+      <button class="vc-accept-btn" id="vc-accept-btn" title="接听">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/wsClient.js"></script>
+  <script src="js/tts.js"></script>
+  <script src="js/voiceCall.js"></script>
+  <script src="js/nav.js?v=6"></script>
+  <script src="js/octopus-widget.js"></script>
+<script src="js/deepsea-particles.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,2 @@
+const {getMemoryService}=require('./service');
+module.exports={router:require('./routes'),getContextSnippet(){return getMemoryService().buildContext({channel:'chat'}).core||null;},onChatExchange(){const s=getMemoryService().settings();const pipelines=[...(s.events_auto_enabled?['events']:[]),...(s.profile_mode!=='off'?['profile']:[])];if(pipelines.length)getMemoryService().enqueueMaintenance({pipelines,automatic:true});},startScheduler(){getMemoryService().start();}};

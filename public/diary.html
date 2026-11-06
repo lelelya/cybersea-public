@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<script>document.documentElement.setAttribute('data-theme',localStorage.getItem('cybersea_theme')||'deep-sea')</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>日记</title>
+<script src="js/shared.js"></script>
+<script src="js/bgm-player.js"></script>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/effects.css" />
+<style>
+.diary-scene {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-top);
+  z-index: 0;
+}
+
+.diary-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  backdrop-filter: blur(var(--blur-glass));
+  background: var(--color-surface-translucent);
+  border-bottom: 1px solid var(--color-border);
+  z-index: 10;
+}
+
+.diary-date-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.diary-date-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s;
+  display: flex;
+}
+
+.diary-date-btn:hover { color: var(--color-text); }
+
+.diary-date-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  min-width: 130px;
+  text-align: center;
+}
+
+.diary-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  font-family: var(--font-family);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s;
+}
+
+.diary-back-btn:hover { color: var(--color-text); }
+
+.diary-content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px 20px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.diary-card {
+  width: 100%;
+  max-width: 640px;
+  background: linear-gradient(135deg,
+    rgba(250, 248, 242, 0.06) 0%,
+    rgba(245, 240, 232, 0.04) 100%
+  );
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 38px 28px 20px;
+  backdrop-filter: blur(4px);
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 页码导航 */
+.diary-page-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+.diary-page-nav button {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-family: var(--font-family);
+  transition: all 0.15s;
+}
+.diary-page-nav button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.diary-page-nav button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.diary-page-info {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  min-width: 60px;
+  text-align: center;
+}
+
+/* 横线层 — 两端渐隐 */
+.diary-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 35px,
+    rgba(234, 241, 255, 0.045) 35px,
+    rgba(234, 241, 255, 0.045) 36px
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+}
+
+.diary-weather {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.diary-text {
+  font-size: 16px;
+  line-height: 2;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  user-select: text;
+  min-height: 100px;
+  outline: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-family);
+  caret-color: var(--color-primary);
+}
+
+.diary-text:empty::before {
+  content: '写下今天的日记...';
+  color: var(--color-text-muted);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.diary-placeholder {
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+/* 批画 */
+.annot-mark-circle {
+  border: 2px solid #ff6b6b;
+  border-radius: 4px;
+  padding: 0 2px;
+  cursor: pointer;
+  position: relative;
+}
+.annot-mark-wavy {
+  text-decoration: underline wavy #f4d58d;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  position: relative;
+}
+.annot-mark-double_line {
+  border-bottom: 3px double #4fd9c8;
+  cursor: pointer;
+  position: relative;
+}
+
+/* 批画浮动工具条 */
+.annot-toolbar {
+  position: fixed;
+  display: none;
+  background: var(--color-surface-translucent-strong);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  box-shadow: var(--shadow-soft);
+  z-index: 1000;
+  gap: 8px;
+  align-items: center;
+}
+.annot-toolbar.show { display: flex; }
+.annot-toolbar-btn {
+  background: none; border: 1px solid transparent; color: var(--color-text);
+  cursor: pointer; padding: 6px 10px; border-radius: var(--radius-sm);
+  font-size: 14px; font-family: var(--font-family); transition: all 0.15s; white-space: nowrap;
+}
+.annot-toolbar-btn:hover { background: var(--color-primary-soft); border-color: var(--color-border-glow); }
+.annot-note-input-wrap { display: none; align-items: center; gap: 6px; }
+.annot-note-input {
+  width: 140px; padding: 4px 8px; border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); background: rgba(255,255,255,0.06);
+  color: var(--color-text); font-size: 13px; font-family: var(--font-family); outline: none;
+}
+.annot-note-input:focus { border-color: var(--color-border-glow); }
+
+@media (max-width: 600px) {
+  .diary-card { padding: 20px 14px; }
+  .diary-text { font-size: 14px; }
+}
+</style>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#050a14" />
+  <link rel="stylesheet" href="css/design-system.css?v=2">
+</head>
+<body>
+<header class="topbar">
+  <a class="nav-back" href="bookshelf.html" aria-label="返回书架">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+  </a>
+  <div class="title">日记</div>
+  <span class="nav-header-spacer" aria-hidden="true"></span>
+</header>
+
+<div class="diary-scene">
+  <div class="page-toolbar diary-toolbar">
+    <div class="diary-date-nav">
+      <button class="diary-date-btn" id="date-prev">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <span class="diary-date-text" id="date-display"></span>
+      <button class="diary-date-btn" id="date-next">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="diary-content-area">
+    <div class="diary-card" id="diary-card">
+      <div id="diary-content"></div>
+    </div>
+    <div class="diary-page-nav" id="diary-page-nav">
+      <button id="page-prev">上一页</button>
+      <span class="diary-page-info" id="page-info">第 1 页</span>
+      <button id="page-next">下一页</button>
+    </div>
+  </div>
+</div>
+
+<!-- 浮动批画工具条 -->
+<div class="annot-toolbar" id="annot-toolbar">
+  <button class="annot-toolbar-btn" data-mark="circle" title="红圈"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> 红圈</button>
+  <button class="annot-toolbar-btn" data-mark="wavy" title="波浪线">〜 波浪线</button>
+  <button class="annot-toolbar-btn" data-mark="double_line" title="双横线">═ 双横线</button>
+    <button class="annot-toolbar-btn" data-mark="single_line" title="单横线">— 单横线</button>
+  <div class="annot-note-input-wrap" id="annot-note-wrap">
+    <input class="annot-note-input" id="annot-note-input" placeholder="批注文字（可选）" maxlength="200" />
+    <button class="annot-toolbar-btn" id="annot-note-confirm" style="color:var(--color-primary);">✓</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/annotations.js"></script>
+<script src="js/diary.js"></script>
+<script src="js/nav.js?v=6"></script>
+</body>
+</html>
