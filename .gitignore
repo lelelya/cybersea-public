@@ -1,0 +1,30 @@
+node_modules/
+.env
+.env.*
+!.env.example
+data/
+backups/
+uploads/*
+!uploads/.gitkeep
+
+# Local tools and private runtime artifacts
+.claude/
+.codex/
+.agents/
+.preview/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.log
+*.pem
+*.key
+.DS_Store
+Thumbs.db
+coverage/
+playwright-report/
+test-results/
+# Bring your own background music
+public/audio/*
+!public/audio/README.md
